@@ -1,0 +1,22 @@
+<div class="canvas-def grid grid-rows-1 row-start-2 row-end-5 rounded-[15px] bg-canvasDef-normal font-monolt text-black">
+  <div class="definition row-span-1 grid grid-cols-2">
+    <div class="dimensions grid grid-rows-2 col-start-1">
+      <div class="width grid grid-cols-4 row-start-1 items-center">
+        <span class="col-start-2">Width</span>
+        <span class="col-start-3 col-end-5">
+          <input maxlength="3" oninput="this.value = this.value.replace(/^0+|[^0-9]/g, '');" class="px-2 w-[56px] rounded-[20px] focus:outline-none"> px
+        </span>
+      </div>
+      <div class="height grid grid-cols-4 row-start-2 items-center">
+        <span class="col-start-2">Height</span>
+        <span class="col-start-3 col-end-5">
+          <input maxlength="3" oninput="this.value = this.value.replace(/^0+|[^0-9]/g, '');" class="px-2 w-[56px] rounded-[20px] focus:outline-none"> px
+        </span>
+      </div>
+    </div>
+    <div class="def-actions col-start-2 flex items-center justify-evenly">
+      <button class="create px-3 py-2 bg-secondary-normal text-white rounded-[20px] hover:bg-secondary-hover">Create</button>
+      <button class="clear px-3 py-2 bg-header-normal text-white rounded-[20px] hover:bg-header-hover">Clear</button>
+    </div>
+  </div>
+</div>

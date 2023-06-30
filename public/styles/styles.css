@@ -1,0 +1,70 @@
+/* Import Tailwind CSS */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './tailwind.css';
+
+/* Declare imported monospace font */
+@font-face {
+  font-family: "JetBrains Mono Light";
+  src: url("../../assets/fonts/JetBrainsMono-Light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "JetBrains Mono Medium";
+  src: url("../../assets/fonts/JetBrainsMono-Medium.ttf") format("truetype");
+}
+
+/* Resetting default styles and providing a basic box-sizing */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base font size and line height */
+html {
+  height: 100%;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Responsive font size for readability */
+body {
+  height: 100%;
+  font-size: 1rem;
+}
+
+/* Container to center the content and set a max width */
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Responsive layout for the main content */
+.main-content {
+  margin: 0;
+}
+
+@media screen and (max-width: 768px) {
+  /* Tablets and larger screens */
+  .container {
+    max-width: 720px;
+  }
+
+  .header {
+    padding: 30px;
+  }
+}
+
+@media screen and (max-width: 992px) {
+  /* Desktop screens */
+  .container {
+    max-width: 960px;
+  }
+
+  .header {
+    padding: 40px;
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "name": "pxl-art-editor",
+  "version": "1.0.0",
+  "description": "Basic Pixel Art Editor with load and export files functionality",
+  "homepage": "",
+  "author": "A. Kalogeras, D. Kyprianou",
+  "files": [
+    "lib"
+  ],
+  "main": "src/index.js",
+  "keywords": [
+    "pxl-art-editor",
+    "pixel",
+    "art",
+    "load",
+    "export"
+  ],
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^6.8.1",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.6.0",
+    "eslint-config-xo": "^0.27.2",
+    "eslint-plugin-prettier": "^3.1.1",
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.3",
+    "husky": "^3.0.9",
+    "jest": "^26.1.0",
+    "lint-staged": "^9.4.3",
+    "nodemon": "^2.0.22",
+    "npm-run-all": "^4.1.5",
+    "postcss-cli": "^10.1.0",
+    "prettier": "^1.19.1",
+    "style-loader": "^3.3.3",
+    "tailwindcss": "^3.3.2",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-middleware": "^6.1.1",
+    "webpack-dev-server": "^4.15.1",
+    "webpack-hot-middleware": "^2.25.4"
+  },
+  "engines": {
+    "npm": ">= 4.0.0"
+  },
+  "scripts": {
+    "start": "npm-run-all --parallel dev:*",
+    "dev:server": "nodemon src/server.js",
+    "dev:client": "webpack --watch --config webpack.config.js",
+    "tailwind": "tailwindcss -i public/styles/styles.css -o public/styles/tailwind.css",
+    "tailwind-watch": "tailwindcss -i public/styles/styles.css -o public/styles/tailwind.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1 && jest",
+    "pretest": "eslint ."
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.4.0",
+    "express": "^4.18.2",
+    "fabric": "^5.3.0",
+    "file-saver": "^2.0.5",
+    "generator-node": "^2.8.0",
+    "yo": "^4.3.1"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.json": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "xo",
+      "prettier"
+    ],
+    "env": {
+      "jest": true,
+      "node": true,
+      "browser": true
+    },
+    "rules": {
+      "prettier/prettier": "error",
+      "capitalized-comments": [
+        "error",
+        "never"
+      ]
+    },
+    "plugins": [
+      "prettier"
+    ]
+  },
+  "repository": "guineadd, DimitrisKyp/pxl-art-editor",
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
