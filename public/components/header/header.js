@@ -1,11 +1,10 @@
 import "./header.css";
-import Canvas from "../canvas/canvas";
 
 export default class Header {
   constructor() {
     this.undoStack = [];
     this.redoStack = [];
-    this.canvasComponent = new Canvas();
+    // this.canvasComponent = new Canvas();
     this.imageData = null;
     this.tempImageData = null;
   }

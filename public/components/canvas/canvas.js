@@ -1,73 +1,104 @@
+import { fabric } from "fabric";
+import Header from "../header/header";
+
 export default class Canvas {
   constructor() {
+    this.headerComponent = new Header();
     this.canvas = null;
-    this.drawingContext = null;
+    // this.drawingContext = null;
     this.grid = null;
     this.cellPixelLength = 0;
     this.CELL_SIDE_COUNT = 25;
+    this.gridSize = 10;
     this.colorInput = null;
   }
 
   init() {
     return new Promise(resolve => {
       document.addEventListener("DOMContentLoaded", () => {
-        /**
-         * @type HTMLCanvasElement
-         */
-        this.canvas = document.getElementById("canvas");
-        this.drawingContext = this.canvas.getContext("2d", {
-          willReadFrequently: true
+        this.canvas = new fabric.Canvas("canvas", {
+          fireRightClick: true,
+          stopContextMenu: true,
+          selection: false
         });
-        this.cellPixelLength = this.canvas.width / this.CELL_SIDE_COUNT;
-        this.grid = document.getElementById("grid");
+
+        this.grid = new fabric.StaticCanvas("grid", {
+          width: this.canvas.width,
+          height: this.canvas.height,
+          selection: false,
+          hoverCursor: "default"
+        });
+
+        let gridCellX = this.canvas.width / this.gridSize;
+        let gridCellY = this.canvas.height / this.gridSize;
+
+        for (let i = 0; i < gridCellX; i++) {
+          let x = i * this.gridSize;
+          this.grid.add(
+            new fabric.Line([x, 0, x, this.canvas.height], {
+              stroke: "#ddd",
+              selectable: false
+            })
+          );
+        }
+
+        for (let j = 0; j < gridCellY; j++) {
+          let y = j * this.gridSize;
+          this.grid.add(
+            new fabric.Line([0, y, this.canvas.width, y], {
+              stroke: "#ddd",
+              selectable: false
+            })
+          );
+        }
+
         this.colorInput = document.getElementById("color-input");
+        // this.canvas = document.getElementById("canvas");
+        // this.drawingContext = this.canvas.getContext("2d", {
+        //   willReadFrequently: true
+        // });
 
-        this.drawingContext.fillStyle = `#fff`;
-        this.drawingContext.fillRect(
-          0,
-          0,
-          this.canvas.width,
-          this.canvas.height
-        );
-        let gridX = this.canvas.width / this.cellPixelLength;
-        let gridY = this.canvas.height / this.cellPixelLength;
+        // this.cellPixelLength = this.canvas.width / this.CELL_SIDE_COUNT;
+        // this.grid = document.getElementById("grid");
 
-        this.grid.innerHTML = "";
+        // this.colorInput = document.getElementById("color-input");
+
+        // this.drawingContext.fillStyle = `#fff`;
+        // this.drawingContext.fillRect(
+        //   0,
+        //   0,
+        //   this.canvas.width,
+        //   this.canvas.height
+        // );
+        // let gridX = this.canvas.width / this.cellPixelLength;
+        // let gridY = this.canvas.height / this.cellPixelLength;
+
+        // this.grid.innerHTML = "";
 
         // draw grid lines
-        this.grid.style.width = `${this.canvas.width}px`;
-        this.grid.style.height = `${this.canvas.height}px`;
-        this.grid.style.display = "grid";
-        this.grid.style.gridTemplateColumns = `repeat(${gridX}, ${this.cellPixelLength}px)`;
-        this.grid.style.gridTemplateRows = `repeat(${gridY}, ${this.cellPixelLength}px)`;
+        // this.grid.style.width = `${this.canvas.width}px`;
+        // this.grid.style.height = `${this.canvas.height}px`;
+        // this.grid.style.display = "grid";
+        // this.grid.style.gridTemplateColumns = `repeat(${gridX}, ${this.cellPixelLength}px)`;
+        // this.grid.style.gridTemplateRows = `repeat(${gridY}, ${this.cellPixelLength}px)`;
 
-        for (let i = 0; i < gridX * gridY; i++) {
-          const cell = document.createElement("div");
-          cell.style.border = "1px solid rgba(0, 0, 0, 0.1)";
-          this.grid.appendChild(cell);
-        }
+        // for (let i = 0; i < gridX * gridY; i++) {
+        //   const cell = document.createElement("div");
+        //   cell.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+        //   this.grid.appendChild(cell);
+        // }
 
         resolve();
       });
     });
   }
 
-  render() {
-    // if (!this.canvas) {
-    //   return;
-    // }
-    // this.drawingContext.fillStyle = `#fff`;
-    // this.drawingContext.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    // let gridX = this.canvas.width / this.cellPixelLength;
-    // let gridY = this.canvas.height / this.cellPixelLength;
-    // draw grid lines
-    // this.grid.style.width = `${this.canvas.width}px`;
-    // this.grid.style.height = `${this.canvas.height}px`;
-    // this.grid.style.gridTemplateColumns = `repeat(${gridX}, ${this.cellPixelLength}px)`;
-    // this.grid.style.gridTemplateRows = `repeat(${gridY}, ${this.cellPixelLength}px)`;
-    // [...Array(gridX * gridY)].forEach(() => {
-    //   this.grid.insertAdjacentHTML("beforeend", "<div></div>");
-    // });
+  render() {}
+
+  saveCanvasState() {
+    this.headerComponent.undoStack.push(
+      JSON.stringify(this.canvas.toDatalessJSON())
+    );
   }
 
   getColorInput() {
@@ -85,23 +116,23 @@ export default class Canvas {
     return imageData;
   }
 
-  setColorAtPxlDrawing(imageData, color, x, y) {
-    const { width, data } = imageData;
-    const cellX = Math.floor(x / this.cellPixelLength);
-    const cellY = Math.floor(y / this.cellPixelLength);
+  // setColorAtPxlDrawing(imageData, color, x, y) {
+  //   const { width, data } = imageData;
+  //   const cellX = Math.floor(x / this.cellPixelLength);
+  //   const cellY = Math.floor(y / this.cellPixelLength);
 
-    for (let i = 0; i < this.cellPixelLength; i++) {
-      for (let j = 0; j < this.cellPixelLength; j++) {
-        const pixelX = cellX * this.cellPixelLength + i;
-        const pixelY = cellY * this.cellPixelLength + j;
+  //   for (let i = 0; i < this.cellPixelLength; i++) {
+  //     for (let j = 0; j < this.cellPixelLength; j++) {
+  //       const pixelX = cellX * this.cellPixelLength + i;
+  //       const pixelY = cellY * this.cellPixelLength + j;
 
-        data[4 * (width * pixelY + pixelX) + 0] = color.r & 0xff;
-        data[4 * (width * pixelY + pixelX) + 1] = color.g & 0xff;
-        data[4 * (width * pixelY + pixelX) + 2] = color.b & 0xff;
-        data[4 * (width * pixelY + pixelX) + 3] = color.a & 0xff;
-      }
-    }
-  }
+  //       data[4 * (width * pixelY + pixelX) + 0] = color.r & 0xff;
+  //       data[4 * (width * pixelY + pixelX) + 1] = color.g & 0xff;
+  //       data[4 * (width * pixelY + pixelX) + 2] = color.b & 0xff;
+  //       data[4 * (width * pixelY + pixelX) + 3] = color.a & 0xff;
+  //     }
+  //   }
+  // }
 
   getColorAtPxl(imageData, x, y) {
     const { width, data } = imageData;

@@ -11,12 +11,6 @@ import alphabetTemplate from "../components/alphabet/alphabet.html";
 import CanvasDef from "../components/canvas-definition/canvas-definition";
 import canvasDefTemplate from "../components/canvas-definition/canvas-definition.html";
 
-const canvas = new Canvas();
-const header = new Header();
-const toolbox = new Toolbox();
-const alphabet = new Alphabet();
-const canvasDef = new CanvasDef();
-
 // insert html templates into containers
 const canvasElement = document.getElementById("canvas-container");
 canvasElement.innerHTML = canvasTemplate;
@@ -33,8 +27,14 @@ alphabetElement.innerHTML = alphabetTemplate;
 const canvasDefElement = document.getElementById("canvas-def-container");
 canvasDefElement.innerHTML = canvasDefTemplate;
 
+const canvas = new Canvas();
+const header = new Header();
+const toolbox = new Toolbox();
+const alphabet = new Alphabet();
+const canvasDef = new CanvasDef();
+
 // render the components after inserting the HTML templates
-canvas.render();
+canvas.init();
 header.render();
 toolbox.render();
 alphabet.render();
