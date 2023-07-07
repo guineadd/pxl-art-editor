@@ -1,6 +1,7 @@
-<div class="canvas bg-white border border-none w-[500px] h-[500px] col-start-1 col-end-6 row-start-2 row-end-7">
-  <canvas id="grid" class="grid absolute pointer-events-none"></canvas>
+<div class="canvas relative bg-white border border-none w-[500px] h-[500px] col-start-1 col-end-6 row-start-2 row-end-7">
   <canvas width="500" height="500" id="canvas"></canvas>
+  <canvas width="500" height="500" class="top-0 left-0 absolute pointer-events-none" id="temp-canvas"></canvas>
+  <canvas id="grid" class="grid top-0 left-0 absolute pointer-events-none"></canvas>
 </div>
 <div class="save-btn grid grid-cols-6 col-start-7 col-end-9 row-start-2 row-end-7 justify-center items-center">
   <span class="col-start-2 text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer"><i class="fa fa-circle-arrow-right"></i></span>
