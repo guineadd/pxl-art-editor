@@ -31,10 +31,14 @@ const canvas = new Canvas();
 const header = new Header();
 const toolbox = new Toolbox();
 const alphabet = new Alphabet();
-const canvasDef = new CanvasDef();
+const canvasDef = new CanvasDef(toolbox);
+
+toolbox.setHeader(header);
+header.setToolbox(toolbox);
+canvasDef.setToolbox(toolbox);
 
 // render the components after inserting the HTML templates
-canvas.init();
+canvas.render();
 header.render();
 toolbox.render();
 alphabet.render();

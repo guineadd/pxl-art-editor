@@ -1,6 +1,6 @@
 import { fabric } from "fabric";
-import Canvas from "../canvas/canvas";
-import Header from "../header/header";
+// import Canvas from "../canvas/canvas";
+// import Header from "../header/header";
 
 export default class Toolbox {
   constructor() {
@@ -19,16 +19,18 @@ export default class Toolbox {
       hoverCursor: "default"
     });
 
-    this.tempCanvas = new fabric.StaticCanvas("temp-canvas");
+    this.header = null;
 
-    this.canvasComponent = new Canvas();
-    this.headerComponent = new Header();
     this.selectedTool = null;
+    this.colorInput = null;
     this.erasing = false;
     this.drawing = false;
     this.col = { r: 0, g: 0, b: 0, a: 0xff };
     this.gridSize = 25;
-    this.objects = [];
+  }
+
+  setHeader(header) {
+    this.header = header;
   }
 
   async render() {
@@ -51,11 +53,19 @@ export default class Toolbox {
           selected.classList.remove("selected");
         }
 
+        if (tool.classList.contains("select")) {
+          this.canvas.selection = true;
+        } else {
+          this.canvas.selection = false;
+        }
+
         selected = tool;
         tool.style.color = "white";
         tool.classList.add("selected");
       });
     });
+
+    this.colorInput = document.getElementById("color-input");
 
     let gridCellX = this.canvas.width / this.gridSize;
     let gridCellY = this.canvas.height / this.gridSize;
@@ -80,18 +90,13 @@ export default class Toolbox {
       );
     }
 
-    // this.grid.bringToFront();
-
-    // initialize the Canvas component
-    await this.canvasComponent.init();
-
     fabric.Object.prototype.hasControls = false;
-    fabric.Object.prototype.hasBorders = false;
+    // fabric.Object.prototype.hasBorders = false;
     fabric.Object.prototype.hasRotatingPoint = false;
     fabric.Object.prototype.objectCaching = false;
     fabric.Object.prototype.statefullCache = false;
     fabric.Object.prototype.noScaleCache = false;
-    fabric.Object.prototype.selectable = false;
+    // fabric.Object.prototype.selectable = false;
     // fabric.Object.prototype.visible = false;
 
     // bind the "this" context explicitly for the mouse events
@@ -102,18 +107,22 @@ export default class Toolbox {
 
     // add event listeners for mouse clicks on canvas
     this.canvas.on("mouse:down", this.mouseDown);
-
     this.canvas.on("mouse:move", this.mouseMove);
-
     this.canvas.on("mouse:up", this.mouseUp);
-
     this.canvas.on("object:moving", this.objectMoving);
+    this.canvas.on("object:added", () => {
+      // this.canvas.dispatchEvent(canvasChange);
+    });
+  }
+
+  clear() {
+    this.canvas.clear();
+    // this.canvas.discardActiveObject();
+    // this.canvas.renderAll();
   }
 
   saveCanvasState() {
-    this.headerComponent.undoStack.push(
-      JSON.stringify(this.canvas.toDatalessJSON())
-    );
+    this.header.undoStack.push(JSON.stringify(this.canvas.toDatalessJSON()));
   }
 
   // eslint-disable-next-line max-params
@@ -127,8 +136,7 @@ export default class Toolbox {
       evented: false
     });
 
-    this.objects.push(rect);
-    this.tempCanvas.add(rect);
+    this.canvas.add(rect);
   }
 
   mouseDown(event) {
@@ -147,14 +155,14 @@ export default class Toolbox {
     } else if (event.e.button === 0) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this.addRect(gridX, gridY, this.canvas.freeDrawingBrush.color);
+          this.addRect(gridX, gridY, this.colorInput.value);
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("brush"):
           this.addRect(
             gridX,
             gridY,
-            this.canvas.freeDrawingBrush.color,
+            this.colorInput.value,
             this.gridSize * 2,
             this.gridSize * 2
           );
@@ -184,13 +192,13 @@ export default class Toolbox {
     } else if (this.drawing) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this.addRect(gridX, gridY, this.canvas.freeDrawingBrush.color);
+          this.addRect(gridX, gridY, this.colorInput.value);
           break;
         case this.selectedTool.classList.contains("brush"):
           this.addRect(
             gridX,
             gridY,
-            this.canvas.freeDrawingBrush.color,
+            this.colorInput.value,
             this.gridSize * 2,
             this.gridSize * 2
           );
@@ -205,19 +213,8 @@ export default class Toolbox {
   }
 
   mouseUp() {
-    if (this.objects.length > 0) {
-      let group = new fabric.Group(this.objects, {
-        evented: false
-      });
-
-      this.canvas.add(group);
-    }
-
-    this.tempCanvas.clear();
-
     this.drawing = false;
     this.erasing = false;
-    this.objects = [];
   }
 
   objectMoving(options) {
@@ -365,7 +362,7 @@ export default class Toolbox {
 
     ctx.putImageData(imageData, 0, 0);
     this.canvas.clear();
-    this.canvas.setBackgroundColor(
+    this.canvas.setBackgroundImage(
       canvas.toDataURL(),
       this.canvas.renderAll.bind(this.canvasComponent.canvas)
     );

@@ -1,9 +1,5 @@
-import { fabric } from "fabric";
-import Header from "../header/header";
-
 export default class Canvas {
   constructor() {
-    this.headerComponent = new Header();
     this.canvas = null;
     this.grid = null;
     this.cellPixelLength = 0;
@@ -11,44 +7,7 @@ export default class Canvas {
     this.colorInput = null;
   }
 
-  init() {
-    return new Promise(resolve => {
-      document.addEventListener("DOMContentLoaded", () => {
-        this.canvas = new fabric.Canvas("canvas", {
-          fireRightClick: true,
-          stopContextMenu: true,
-          selection: false
-        });
-
-        this.colorInput = document.getElementById("color-input");
-
-        resolve();
-      });
-    });
-  }
-
   render() {}
-
-  saveCanvasState() {
-    this.headerComponent.undoStack.push(
-      JSON.stringify(this.canvas.toDatalessJSON())
-    );
-  }
-
-  getColorInput() {
-    return this.colorInput;
-  }
-
-  getImageData() {
-    let imageData = this.drawingContext.getImageData(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height
-    );
-
-    return imageData;
-  }
 
   getColorAtPxl(imageData, x, y) {
     const { width, data } = imageData;
