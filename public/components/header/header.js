@@ -2,21 +2,20 @@ export default class Header {
   constructor() {
     this.undoStack = [];
     this.redoStack = [];
-    this.toolbox = null;
     this.canvas = null;
+    this._canvas = null;
     this.undoBtn = null;
     this.redoBtn = null;
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
   }
 
-  setToolbox(toolbox) {
-    this.toolbox = toolbox;
+  setComponents(canvas) {
+    this._canvas = canvas;
   }
 
   async render() {
-    await this.toolbox.render();
-    this.canvas = this.toolbox.canvas;
+    this.canvas = this._canvas.canvas;
 
     this.undoBtn = document.getElementById("undo-btn");
     this.redoBtn = document.getElementById("redo-btn");

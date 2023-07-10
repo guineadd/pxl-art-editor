@@ -33,9 +33,9 @@ const toolbox = new Toolbox();
 const alphabet = new Alphabet();
 const canvasDef = new CanvasDef(toolbox);
 
-toolbox.setHeader(header);
-header.setToolbox(toolbox);
-canvasDef.setToolbox(toolbox);
+toolbox.setComponents(header, canvas);
+header.setComponents(canvas);
+canvasDef.setComponents(toolbox);
 
 // render the components after inserting the HTML templates
 canvas.render();
