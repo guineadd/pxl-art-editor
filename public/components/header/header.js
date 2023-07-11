@@ -1,3 +1,5 @@
+import { saveAs } from "file-saver";
+
 export default class Header {
   constructor() {
     this.undoStack = [];
@@ -6,8 +8,11 @@ export default class Header {
     this._canvas = null;
     this.undoBtn = null;
     this.redoBtn = null;
+    this.exportBtn = null;
+    this.pxlData = null;
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
+    this.export = this.export.bind(this);
   }
 
   setComponents(canvas) {
@@ -19,8 +24,10 @@ export default class Header {
 
     this.undoBtn = document.getElementById("undo-btn");
     this.redoBtn = document.getElementById("redo-btn");
+    this.exportBtn = document.getElementById("export-btn");
     this.undoBtn.addEventListener("click", this.undo);
     this.redoBtn.addEventListener("click", this.redo);
+    this.exportBtn.addEventListener("click", this.export);
   }
 
   undo() {
@@ -30,7 +37,7 @@ export default class Header {
       this.canvas.clear();
       this.canvas.loadFromJSON(prev, () => {
         this.canvas.forEachObject(obj => {
-          obj.selectable = false;
+          obj.selectable = true;
           obj.evented = false;
         });
 
@@ -46,12 +53,19 @@ export default class Header {
       this.canvas.clear();
       this.canvas.loadFromJSON(next, () => {
         this.canvas.forEachObject(obj => {
-          obj.selectable = false;
+          obj.selectable = true;
           obj.evented = false;
         });
 
         this.canvas.renderAll.bind(this.canvas);
       });
     }
+  }
+
+  export() {
+    this.pxlData = this._canvas.pxlData;
+    console.log(this.pxlData);
+    const blob = new Blob([this.pxlData], { type: "application/octet-stream" });
+    saveAs(blob, "test.pxl");
   }
 }
