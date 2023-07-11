@@ -35,11 +35,12 @@ const canvasDef = new CanvasDef(toolbox);
 
 toolbox.setComponents(header, canvas);
 header.setComponents(canvas);
-canvasDef.setComponents(toolbox);
+canvasDef.setComponents(toolbox, canvas, header);
 
 // render the components after inserting the HTML templates
-canvas.render();
+canvas.render(500, 500);
 header.render();
+toolbox.toolSelect();
 toolbox.render();
 alphabet.render();
 canvasDef.render();

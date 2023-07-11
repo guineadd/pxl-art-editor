@@ -14,7 +14,7 @@ export default class Header {
     this._canvas = canvas;
   }
 
-  async render() {
+  render() {
     this.canvas = this._canvas.canvas;
 
     this.undoBtn = document.getElementById("undo-btn");
@@ -28,7 +28,14 @@ export default class Header {
       this.redoStack.push(JSON.stringify(this.canvas.toDatalessJSON()));
       let prev = this.undoStack.pop();
       this.canvas.clear();
-      this.canvas.loadFromJSON(prev, this.canvas.renderAll.bind(this.canvas));
+      this.canvas.loadFromJSON(prev, () => {
+        this.canvas.forEachObject(obj => {
+          obj.selectable = false;
+          obj.evented = false;
+        });
+
+        this.canvas.renderAll.bind(this.canvas);
+      });
     }
   }
 
@@ -37,7 +44,14 @@ export default class Header {
       this.undoStack.push(JSON.stringify(this.canvas.toDatalessJSON()));
       let next = this.redoStack.pop();
       this.canvas.clear();
-      this.canvas.loadFromJSON(next, this.canvas.renderAll.bind(this.canvas));
+      this.canvas.loadFromJSON(next, () => {
+        this.canvas.forEachObject(obj => {
+          obj.selectable = false;
+          obj.evented = false;
+        });
+
+        this.canvas.renderAll.bind(this.canvas);
+      });
     }
   }
 }

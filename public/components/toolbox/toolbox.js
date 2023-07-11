@@ -17,7 +17,25 @@ export default class Toolbox {
     this._canvas = canvas;
   }
 
-  async render() {
+  render() {
+    this.canvas = this._canvas.canvas;
+    this.gridSize = this._canvas.gridSize;
+    this.colorInput = document.getElementById("color-input");
+
+    // bind the "this" context explicitly for the mouse events
+    this.mouseDown = this.mouseDown.bind(this);
+    this.mouseMove = this.mouseMove.bind(this);
+    this.mouseUp = this.mouseUp.bind(this);
+    this.objectMoving = this.objectMoving.bind(this);
+
+    // add event listeners for mouse clicks on canvas
+    this.canvas.on("mouse:down", this.mouseDown);
+    this.canvas.on("mouse:move", this.mouseMove);
+    this.canvas.on("mouse:up", this.mouseUp);
+    this.canvas.on("object:moving", this.objectMoving);
+  }
+
+  toolSelect() {
     // pencil is by default the selected tool -- use the selected class to work with different tools
     const defaultTool = document.querySelector(".default");
 
@@ -47,25 +65,6 @@ export default class Toolbox {
         tool.style.color = "white";
         tool.classList.add("selected");
       });
-    });
-
-    this.canvas = this._canvas.canvas;
-    this.gridSize = this._canvas.gridSize;
-    this.colorInput = document.getElementById("color-input");
-
-    // bind the "this" context explicitly for the mouse events
-    this.mouseDown = this.mouseDown.bind(this);
-    this.mouseMove = this.mouseMove.bind(this);
-    this.mouseUp = this.mouseUp.bind(this);
-    this.objectMoving = this.objectMoving.bind(this);
-
-    // add event listeners for mouse clicks on canvas
-    this.canvas.on("mouse:down", this.mouseDown);
-    this.canvas.on("mouse:move", this.mouseMove);
-    this.canvas.on("mouse:up", this.mouseUp);
-    this.canvas.on("object:moving", this.objectMoving);
-    this.canvas.on("object:added", () => {
-      // this.canvas.dispatchEvent(canvasChange);
     });
   }
 

@@ -2,6 +2,12 @@ import { fabric } from "fabric";
 
 export default class Canvas {
   constructor() {
+    this.canvas = null;
+    this.grid = null;
+    this.gridSize = 20;
+  }
+
+  render(width, height) {
     this.canvas = new fabric.Canvas("canvas", {
       fireRightClick: true,
       stopContextMenu: true,
@@ -10,22 +16,18 @@ export default class Canvas {
       preserveObjectStacking: true
     });
     this.grid = new fabric.StaticCanvas("grid", {
-      width: this.canvas.width,
-      height: this.canvas.height,
+      width: width,
+      height: height,
       selection: false,
       hoverCursor: "default"
     });
-    this.gridSize = 25;
-  }
-
-  render() {
-    let gridCellX = this.canvas.width / this.gridSize;
-    let gridCellY = this.canvas.height / this.gridSize;
+    let gridCellX = width / this.gridSize;
+    let gridCellY = height / this.gridSize;
 
     for (let i = 0; i < gridCellX; i++) {
       let x = i * this.gridSize;
       this.grid.add(
-        new fabric.Line([x, 0, x, this.canvas.height], {
+        new fabric.Line([x, 0, x, height], {
           stroke: "#ddd",
           selectable: false
         })
@@ -35,7 +37,7 @@ export default class Canvas {
     for (let j = 0; j < gridCellY; j++) {
       let y = j * this.gridSize;
       this.grid.add(
-        new fabric.Line([0, y, this.canvas.width, y], {
+        new fabric.Line([0, y, width, y], {
           stroke: "#ddd",
           selectable: false
         })
