@@ -21,16 +21,17 @@
         <i class="fa fa-expand flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
         <span class="col-start-4 col-end-11 group-hover:text-gray-400">Select</span>
       </span>
-      <span class="hand my-auto row-start-6 row-end-7 grid grid-cols-10 group hover:cursor-pointer">
-        <i class="fa fa-hand flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-        <span class="col-start-4 col-end-11 group-hover:text-gray-400">Hand</span>
-      </span>
     </div>
   </div>
-  <div class="colors row-start-5 row-end-7 grid grid-rows-6 grid-cols-12">
-    <div class="color-container w-[50px] h-[50px] relative row-start-2 row-end-5 col-start-4">
-      <div class="box-white rounded-[10px] w-full h-full absolute bg-white"></div>
-      <div class="box-black rounded-[10px] w-full h-full absolute bg-black transform translate-x-1/2 translate-y-1/2"></div>
-    </div>
+  <div class="palette row-start-5 row-end-7 grid grid-rows-4 grid-cols-1 font-monolt text-lg">
+    <span class="color grid grid-cols-10 grid-rows-4 row-start-2 group hover:cursor-pointer">
+      <label class="row-start-1 row-end-2 col-start-1 col-end-11 group-hover:text-gray-400" for="color-input">
+        <span class="grid grid-cols-10 row-start-1 row-end-2 hover:cursor-pointer">
+          <i class="fa fa-palette flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
+          <span class="col-start-4 col-end-11">Color</span>
+        </span>
+      </label>
+      <input id="color-input" type="color" class="row-start-4 col-start-4 border-none bg-transparent w-[50px] h-[50px] hover:cursor-pointer">
+    </span>
   </div>
 </div>
