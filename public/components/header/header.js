@@ -64,8 +64,44 @@ export default class Header {
 
   export() {
     this.pxlData = this._canvas.pxlData;
-    console.log(this.pxlData);
-    const blob = new Blob([this.pxlData], { type: "application/octet-stream" });
-    saveAs(blob, "test.pxl");
+
+    // const blob = new Blob([this.pxlData], { type: "application/octet-stream" });
+    // saveAs(blob, "test.pxl");
+    this.generateCppFile([
+      this.pxlData.slice(0, 5),
+      this.pxlData.slice(5, 10),
+      this.pxlData.slice(10)
+    ]);
+  }
+
+  generateCppFile(chars) {
+    let cppContent = "";
+
+    chars.forEach((char, idx) => {
+      const hexCharCode = `0x${(0x41 + idx).toString(16).toUpperCase()}`;
+
+      cppContent += `// ${hexCharCode}  ${String.fromCharCode(0x41 + idx)}\n`;
+      cppContent += `static const uint8_t glyph_${String.fromCharCode(
+        0x41 + idx
+      )}[] = {\n`;
+
+      for (let i = 0; i < char.length; i++) {
+        cppContent += `    0x${char[i].toString(16).toUpperCase()},\n`;
+      }
+
+      cppContent += `}; // Bitmap\n`;
+      cppContent += `extern constexpr Bitmap bitmap_glyph_${String.fromCharCode(
+        0x41 + idx
+      )}(glyph_${String.fromCharCode(
+        0x41 + idx
+      )}, GLYPH_WIDTH, GLYPH_HEIGHT);\n\n`;
+    });
+
+    const cppFileContent = `FONT_LOCATION_FLASH\n\n${cppContent}`;
+    const blob = new Blob([cppFileContent], {
+      type: "text/plain;charset=utf-8"
+    });
+
+    saveAs(blob, "font.cpp");
   }
 }
