@@ -8,7 +8,7 @@ export default class Canvas {
     this.gridSize = 20;
     this.saveBtn = null;
     this.save = this.save.bind(this);
-    this.pxlData = new Uint8Array(0);
+    this.pxlData = [];
   }
 
   setComponents(alphabet) {
@@ -20,6 +20,7 @@ export default class Canvas {
       fireRightClick: true,
       stopContextMenu: true,
       selection: false,
+      // backgroundColor: "rgba(255, 255, 255, 255)",
       skipTargetFind: false,
       preserveObjectStacking: true
     });
@@ -104,91 +105,57 @@ export default class Canvas {
   save() {
     // convert the canvas to a data URL
     const dataURL = this.canvas.toDataURL();
-
     // create an element to display the data as an image
     const image = new Image();
     image.src = dataURL;
     image.width = 50;
     image.height = 50;
-
     // append the image to the alphabet canvas container
     const alphabet = document.getElementById("alphabet");
     // alphabet.innerHTML = ""; // optional
     alphabet.appendChild(image);
 
-    // store the pixel data into a new Uint8Array
-    const imageData = this.canvas
-      .getContext("2d", { willReadFrequently: true })
-      .getImageData(0, 0, this.canvas.width, this.canvas.height);
-
-    // calculate the ratio between the displayed canvas size and the defined canvas
-    let actualWidth = document.getElementById("canvas-width");
-    let actualHeight = document.getElementById("canvas-height");
-    const widthRatio = this.canvas.width / actualWidth.value;
-    const heightRatio = this.canvas.height / actualHeight.value;
-
-    // create a new canvas with the defined size
-    const actualCanvas = document.createElement("canvas");
-    actualCanvas.width = actualWidth.value;
-    actualCanvas.height = actualHeight.value;
-    const actualContext = actualCanvas.getContext("2d");
-    const actualImageData = actualContext.getImageData(
-      0,
-      0,
-      actualWidth.value,
-      actualHeight.value
+    const actualWidth = parseInt(
+      document.getElementById("canvas-width").value,
+      10
+    );
+    const actualHeight = parseInt(
+      document.getElementById("canvas-height").value,
+      10
     );
 
-    // resize and copy the image data to the new canvas
-    for (let y = 0; y < actualHeight.value; y++) {
-      for (let x = 0; x < actualWidth.value; x++) {
-        const sourceX = Math.floor(x * widthRatio);
-        const sourceY = Math.floor(y * heightRatio);
+    // create a temporary fabric.Canvas instance to render the fabric.js canvas content
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = actualWidth;
+    tempCanvas.height = actualHeight;
+    const tempContext = tempCanvas.getContext("2d");
+    tempContext.drawImage(
+      this.canvas.getElement(),
+      0,
+      0,
+      actualWidth,
+      actualHeight
+    );
 
-        const { r, g, b, a } = this.getColorAtPxl(imageData, sourceX, sourceY);
-        this.setColorAtPxl(actualImageData, { r, g, b, a }, x, y);
+    const pxlArray = [];
+
+    for (let y = 0; y < actualHeight; y++) {
+      let row = 0;
+
+      for (let x = 0; x < actualWidth; x++) {
+        const tempData = tempContext.getImageData(x, y, 1, 1).data;
+        const r = tempData[0];
+        const g = tempData[1];
+        const b = tempData[2];
+        const a = tempData[3];
+        const isOn = r === 0 && g === 0 && b === 0 && a === 255;
+
+        row = (row << 1) | (isOn ? 1 : 0);
       }
+
+      pxlArray.push(row);
     }
 
-    const currPxlData = new Uint8Array(actualWidth.value * actualHeight.value); // the defined canvas' width * height (i.e. 5px * 7px = 35px)
-
-    // extract the pixel data from the resized canvas
-    for (let y = 0; y < actualHeight.value; y++) {
-      for (let x = 0; x < actualWidth.value; x++) {
-        const { r, g, b, a } = this.getColorAtPxl(actualImageData, x, y);
-        const pxlValue = ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
-        currPxlData[y * 5 * x] = pxlValue;
-      }
-    }
-
-    this.pxlData = this.concatUint8Arrays(this.pxlData, currPxlData);
-    console.log(this.pxlData);
-    console.log(actualWidth.value, actualHeight.value);
-
-    // const currPxlData = new Uint8Array(imageData.data.length / 4);
-    // let dataIdx = 0;
-
-    // for (let i = 0; i < imageData.data.length; i += 4) {
-    //   const r = imageData.data[i];
-    //   const g = imageData.data[i + 1];
-    //   const b = imageData.data[i + 2];
-    //   const a = imageData.data[i + 3];
-
-    //   // convert the pixel data to 0xXX form
-    //   const pxlValue = ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
-    //   currPxlData[dataIdx] = pxlValue;
-
-    //   dataIdx++;
-    // }
-
-    // this.pxlData = this.concatUint8Arrays(this.pxlData, currPxlData);
-  }
-
-  concatUint8Arrays(a, b) {
-    const combined = new Uint8Array(a.length + b.length);
-    combined.set(a, 0);
-    combined.set(b, a.length);
-
-    return combined;
+    this.pxlData.push(pxlArray);
   }
 }
