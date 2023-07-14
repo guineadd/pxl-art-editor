@@ -47,6 +47,14 @@ body {
   margin: 0;
 }
 
+#alphabet div {
+  margin: 2px;
+}
+
+#alphabet .selected {
+  border: 1px solid #7c3449;
+}
+
 @media screen and (max-width: 768px) {
   /* Tablets and larger screens */
   .container {

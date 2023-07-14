@@ -4,11 +4,15 @@ export default class Canvas {
   constructor() {
     this.canvas = null;
     this.alphabet = null;
+    this.alphabetElement = null;
     this.grid = null;
     this.gridSize = 20;
     this.saveBtn = null;
+    this.removeBtn = null;
     this.save = this.save.bind(this);
+    this.remove = this.remove.bind(this);
     this.pxlData = [];
+    this.selectedDrawings = [];
   }
 
   setComponents(alphabet) {
@@ -55,8 +59,14 @@ export default class Canvas {
       );
     }
 
+    this.alphabetElement = document.getElementById("alphabet");
+    this.loadState();
     this.saveBtn = document.getElementById("save-btn");
+    this.removeBtn = document.getElementById("remove-btn");
     this.saveBtn.addEventListener("click", this.save);
+    this.removeBtn.addEventListener("click", this.remove);
+
+    this.updateButtonState();
 
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
@@ -103,18 +113,7 @@ export default class Canvas {
   }
 
   save() {
-    // convert the canvas to a data URL
-    const dataURL = this.canvas.toDataURL();
-    // create an element to display the data as an image
-    const image = new Image();
-    image.src = dataURL;
-    image.width = 50;
-    image.height = 50;
-    // append the image to the alphabet canvas container
-    const alphabet = document.getElementById("alphabet");
-    // alphabet.innerHTML = ""; // optional
-    alphabet.appendChild(image);
-
+    // get the user-defined dimensions
     const actualWidth = parseInt(
       document.getElementById("canvas-width").value,
       10
@@ -123,6 +122,46 @@ export default class Canvas {
       document.getElementById("canvas-height").value,
       10
     );
+
+    // convert the canvas to a data URL
+    const dataURL = this.canvas.toDataURL();
+
+    // create an element to display the data as an image
+    const image = new Image();
+    image.src = dataURL;
+    image.width = actualWidth * 3;
+    image.height = actualHeight * 3;
+
+    // append the image to a newly created div element
+    const newDiv = document.createElement("div");
+    // eslint-disable-next-line prettier/prettier
+    newDiv.style = `width: ${actualWidth * 3}px; height: ${actualHeight * 3}px; padding: 2px;`;
+    newDiv.appendChild(image);
+
+    // append the new element to the alphabet canvas container
+    this.alphabetElement.appendChild(newDiv);
+
+    // event listener to add the .selected class on click
+    newDiv.addEventListener("click", () => {
+      if (!newDiv.classList.contains("selected")) {
+        newDiv.classList.add("selected");
+        this.selectedDrawings.push(newDiv);
+      } else if (newDiv.classList.contains("selected")) {
+        newDiv.classList.remove("selected");
+        let i = this.selectedDrawings.indexOf(newDiv);
+
+        if (i > -1) {
+          this.selectedDrawings.splice(i, 1);
+        }
+      }
+
+      this.updateButtonState();
+    });
+
+    // check for an empty alphabet
+    this.updateButtonState();
+    // save the drawing in the browser's localStorage
+    this.saveState();
 
     // create a temporary fabric.Canvas instance to render the fabric.js canvas content
     const tempCanvas = document.createElement("canvas");
@@ -157,5 +196,66 @@ export default class Canvas {
     }
 
     this.pxlData.push(pxlArray);
+  }
+
+  remove() {
+    this.selectedDrawings.forEach(drawing => {
+      drawing.remove();
+    });
+
+    this.selectedDrawings.length = 0;
+    this.updateButtonState();
+    this.saveState();
+  }
+
+  updateButtonState() {
+    if (this.alphabetElement.childElementCount === 0) {
+      this.removeBtn.style.opacity = "0.5";
+      this.removeBtn.style.pointerEvents = "none";
+    } else {
+      this.removeBtn.style.opacity = "1";
+      this.removeBtn.style.pointerEvents = "unset";
+    }
+  }
+
+  saveState() {
+    localStorage.setItem(
+      "drawings",
+      JSON.stringify(
+        Array.from(this.alphabetElement.children).map(
+          drawing => drawing.innerHTML
+        )
+      )
+    );
+  }
+
+  loadState() {
+    let state = localStorage.getItem("drawings");
+
+    if (state) {
+      let data = JSON.parse(state);
+
+      data.forEach(item => {
+        const newDiv = document.createElement("div");
+        newDiv.innerHTML = item;
+        this.alphabetElement.appendChild(newDiv);
+
+        newDiv.addEventListener("click", () => {
+          if (!newDiv.classList.contains("selected")) {
+            newDiv.classList.add("selected");
+            this.selectedDrawings.push(newDiv);
+          } else if (newDiv.classList.contains("selected")) {
+            newDiv.classList.remove("selected");
+            let i = this.selectedDrawings.indexOf(newDiv);
+
+            if (i > -1) {
+              this.selectedDrawings.splice(i, 1);
+            }
+          }
+
+          this.updateButtonState();
+        });
+      });
+    }
   }
 }

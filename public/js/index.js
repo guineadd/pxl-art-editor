@@ -37,6 +37,7 @@ canvas.setComponents(alphabet);
 toolbox.setComponents(header, canvas);
 header.setComponents(canvas);
 canvasDef.setComponents(toolbox, canvas, header);
+alphabet.setComponents(canvas);
 
 // render the components after inserting the HTML templates
 canvas.render(500, 500);
