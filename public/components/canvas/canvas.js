@@ -178,10 +178,56 @@ export default class Canvas {
 
     const pxlArray = [];
 
-    for (let y = 0; y < actualHeight; y++) {
-      let row = 0;
+    // for (let y = 0; y < actualHeight; y++) {
+    //   let row = 0;
 
-      for (let x = 0; x < actualWidth; x++) {
+    //   for (let x = 0; x < actualWidth; x++) {
+    //     const tempData = tempContext.getImageData(x, y, 1, 1).data;
+    //     const r = tempData[0];
+    //     const g = tempData[1];
+    //     const b = tempData[2];
+    //     const a = tempData[3];
+    //     const isOn = r === 0 && g === 0 && b === 0 && a === 255;
+
+    //     row = (row << 1) | (isOn ? 1 : 0);
+    //   }
+
+    //   pxlArray.push(row);
+    // }
+
+    // for (let x = actualWidth - 1; x >= 0; x--) {
+    //   let col = 0;
+    //   let bitCount = 0;
+
+    //   for (let y = actualHeight - 1; y >= 0; y--) {
+    //     const tempData = tempContext.getImageData(x, y, 1, 1).data;
+    //     const r = tempData[0];
+    //     const g = tempData[1];
+    //     const b = tempData[2];
+    //     const a = tempData[3];
+    //     const isOn = r === 0 && g === 0 && b === 0 && a === 255;
+
+    //     col = (col << 1) | (isOn ? 1 : 0);
+    //     bitCount++;
+
+    //     if (bitCount === 8 || (y === 0 && bitCount > 0)) {
+    //       pxlArray.push(col);
+    //       col = 0;
+    //       bitCount = 0;
+    //     }
+    //   }
+
+    //   if (bitCount > 0) {
+    //     pxlArray.push(col << (8 - bitCount));
+    //   }
+    // }
+
+    for (let x = 0; x < actualWidth; x++) {
+      let exp = 0;
+      let byte = 0;
+      let byteSize = 8;
+
+      for (let y = 0; y < actualHeight; y++) {
         const tempData = tempContext.getImageData(x, y, 1, 1).data;
         const r = tempData[0];
         const g = tempData[1];
@@ -189,12 +235,59 @@ export default class Canvas {
         const a = tempData[3];
         const isOn = r === 0 && g === 0 && b === 0 && a === 255;
 
-        row = (row << 1) | (isOn ? 1 : 0);
-      }
+        let bit = isOn ? 1 : 0;
+        byte += bit * Math.pow(2, exp++);
 
-      pxlArray.push(row);
+        if (exp === byteSize || y === actualHeight - 1) {
+          pxlArray.push(byte);
+          byte = 0;
+          exp = 0;
+        }
+      }
     }
 
+    // for (let x = 0; x < Math.min(actualWidth, 8); x++) {
+    //   let col = 0;
+    //   let bit = 0;
+
+    //   for (let y = actualHeight; y >= 0; y--) {
+    //     const tempData = tempContext.getImageData(x, y, 1, 1).data;
+    //     const r = tempData[0];
+    //     const g = tempData[1];
+    //     const b = tempData[2];
+    //     const a = tempData[3];
+    //     const isOn = r === 0 && g === 0 && b === 0 && a === 255;
+
+    //     col = (col << 1) | (isOn ? 1 : 0);
+    //     bit++;
+
+    //     if (bit === 8) {
+    //       pxlArray.push(col);
+    //       col = 0;
+    //       bit = 0;
+    //     }
+    //   }
+
+    //   for (let x = 8; x < actualWidth; x++) {
+    //     const tempData = tempContext.getImageData(x, y, 1, 1).data;
+    //     const r = tempData[0];
+    //     const g = tempData[1];
+    //     const b = tempData[2];
+    //     const a = tempData[3];
+    //     const isOn = r === 0 && g === 0 && b === 0 && a === 255;
+
+    //     col = (col << 1) | (isOn ? 1 : 0);
+    //     bit++;
+
+    //     if (bit === 8 || x === actualWidth - 1) {
+    //       pxlArray.push(col);
+    //       col = 0;
+    //       bit = 0;
+    //     }
+    //   }
+    // }
+
+    console.log(pxlArray);
     this.pxlData.push(pxlArray);
   }
 

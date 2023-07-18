@@ -70,13 +70,74 @@ export default class Header {
     this.generateCppFile(this.pxlData, width.value, height.value);
   }
 
+  // generateCppFile(data, width, height) {
+  //   let cppContent = "";
+  //   for (let idx = 0; idx < data.length; idx++) {
+  //     cppContent += `static const uint8_t glyph_${idx}[] = {\n`;
+
+  //     for (let i = 0; i < height; i++) {
+  //       cppContent += `    0x${data[idx][i].toString(16).toUpperCase()},\n`;
+  //     }
+
+  //     cppContent += `}; // Bitmap dimensions ${width}x${height} (width x height)\n`;
+  //     cppContent += `extern constexpr Bitmap bitmap_glyph_${idx}(glyph_${idx}, ${width}, ${height});\n\n`;
+  //   }
+
+  //   const cppFileContent = `FONT_LOCATION\n\n${cppContent}`;
+  //   const blob = new Blob([cppFileContent], {
+  //     type: "text/plain;charset=utf-8"
+  //   });
+
+  //   saveAs(blob, "font.cpp");
+  // }
+
+  // generateCppFile(data, width, height) {
+  //   let cppContent = "";
+  //   for (let idx = 0; idx < data.length; idx++) {
+  //     cppContent += `static const uint8_t glyph_${idx}[] = {\n`;
+
+  //     for (let i = 0; i < width; i++) {
+  //       cppContent += `    0x${data[idx][i].toString(16).toUpperCase()},\n`;
+  //     }
+
+  //     cppContent += `}; // Bitmap dimensions ${width}x${height} (width x height)\n`;
+  //     cppContent += `extern constexpr Bitmap bitmap_glyph_${idx}(glyph_${idx}, ${width}, ${height});\n\n`;
+  //   }
+
+  //   const cppFileContent = `FONT_LOCATION\n\n${cppContent}`;
+  //   const blob = new Blob([cppFileContent], {
+  //     type: "text/plain;charset=utf-8"
+  //   });
+
+  //   saveAs(blob, "font.cpp");
+  // }
+
   generateCppFile(data, width, height) {
     let cppContent = "";
+    // eslint-disable-next-line no-unused-vars
+    const bytesPerRow = Math.ceil(width / 8); // calculate the number of bytes per row
+
     for (let idx = 0; idx < data.length; idx++) {
       cppContent += `static const uint8_t glyph_${idx}[] = {\n`;
 
-      for (let i = 0; i < height; i++) {
-        cppContent += `    0x${data[idx][i].toString(16).toUpperCase()},\n`;
+      for (let i = 0; i < width; i++) {
+        let rowData = 0;
+        let byteCount = 0;
+
+        for (let j = 0; j < height; j++) {
+          const pixelValue = data[idx][i * height + j] ? 1 : 0;
+          rowData = (rowData << 1) | pixelValue;
+          byteCount++;
+
+          if (byteCount === 8 || (j === height - 1 && byteCount > 0)) {
+            cppContent += `    0x${rowData
+              .toString(16)
+              .toUpperCase()
+              .padStart(2, "0")},\n`;
+            rowData = 0;
+            byteCount = 0;
+          }
+        }
       }
 
       cppContent += `}; // Bitmap dimensions ${width}x${height} (width x height)\n`;
