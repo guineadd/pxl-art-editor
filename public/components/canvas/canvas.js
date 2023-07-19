@@ -2,6 +2,7 @@ import { fabric } from "fabric";
 
 export default class Canvas {
   constructor() {
+    this.canvasContainer = null;
     this.canvas = null;
     this.alphabet = null;
     this.alphabetElement = null;
@@ -24,7 +25,7 @@ export default class Canvas {
       fireRightClick: true,
       stopContextMenu: true,
       selection: false,
-      // backgroundColor: "rgba(255, 255, 255, 255)",
+      backgroundColor: "rgba(255, 255, 255, 255)",
       skipTargetFind: false,
       preserveObjectStacking: true
     });
@@ -59,14 +60,12 @@ export default class Canvas {
       );
     }
 
+    this.canvasContainer = document.querySelector("#canvas-container .canvas");
     this.alphabetElement = document.getElementById("alphabet");
-    this.loadState();
     this.saveBtn = document.getElementById("save-btn");
     this.removeBtn = document.getElementById("remove-btn");
     this.saveBtn.addEventListener("click", this.save);
     this.removeBtn.addEventListener("click", this.remove);
-
-    this.updateButtonState();
 
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
@@ -76,6 +75,11 @@ export default class Canvas {
     // fabric.Object.prototype.hasBorders = false;
     // fabric.Object.prototype.selectable = false;
     // fabric.Object.prototype.visible = false;
+
+    this.canvasContainer.addEventListener("contextmenu", e => {
+      e.preventDefault();
+    });
+    this.loadState();
   }
 
   // eslint-disable-next-line max-params
@@ -112,6 +116,15 @@ export default class Canvas {
     data[4 * (width * y + x) + 3] = color.a & 0xff;
   }
 
+  newImage(canvas) {
+    return new fabric.Image(canvas, {
+      left: 0,
+      top: 0,
+      selectable: true,
+      evented: false
+    });
+  }
+
   save() {
     // get the user-defined dimensions
     const actualWidth = parseInt(
@@ -123,44 +136,103 @@ export default class Canvas {
       10
     );
 
+    // let imageWidth = 0;
+    // let imageHeight = 0;
+
     // convert the canvas to a data URL
     const dataURL = this.canvas.toDataURL();
 
     // create an element to display the data as an image
     const image = new Image();
     image.src = dataURL;
-    image.width = actualWidth * 3;
-    image.height = actualHeight * 3;
 
-    // append the image to a newly created div element
-    const newDiv = document.createElement("div");
-    // eslint-disable-next-line prettier/prettier
-    newDiv.style = `width: ${actualWidth * 3}px; height: ${actualHeight * 3}px; padding: 2px;`;
-    newDiv.appendChild(image);
+    // if (actualWidth > actualHeight) {
+    //   imageWidth = 25;
+    //   imageHeight = (actualHeight / actualWidth) * 25;
+    // } else {
+    //   imageWidth = (actualWidth / actualHeight) * 25;
+    //   imageHeight = 25;
+    // }
 
-    // append the new element to the alphabet canvas container
-    this.alphabetElement.appendChild(newDiv);
+    image.width = 25;
+    image.height = 25;
+
+    // create div to contain the image
+    const imageDiv = document.createElement("div");
+    imageDiv.classList.add("imageDiv");
+    imageDiv.appendChild(image);
 
     // event listener to add the .selected class on click
-    newDiv.addEventListener("click", () => {
-      if (!newDiv.classList.contains("selected")) {
-        newDiv.classList.add("selected");
-        this.selectedDrawings.push(newDiv);
-      } else if (newDiv.classList.contains("selected")) {
-        newDiv.classList.remove("selected");
-        let i = this.selectedDrawings.indexOf(newDiv);
+    imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
 
-        if (i > -1) {
-          this.selectedDrawings.splice(i, 1);
+    // find matching div based on dimensions
+    const sizeDivs = document.getElementsByClassName(
+      `size_${actualWidth}x${actualHeight}`
+    );
+
+    let matching = false;
+
+    for (const sizeDiv of sizeDivs) {
+      const sizeDivImages = sizeDiv.getElementsByTagName("img");
+
+      if (sizeDivImages.length > 0) {
+        const firstImage = sizeDivImages[0];
+
+        if (
+          firstImage.width === image.width &&
+          firstImage.height === image.height
+        ) {
+          sizeDiv
+            .getElementsByClassName("image-container")[0]
+            .appendChild(imageDiv);
+          matching = true;
+          break;
         }
       }
+    }
 
-      this.updateButtonState();
+    // if there is no match, create a new div
+    if (!matching) {
+      const sizeDiv = document.createElement("div");
+      sizeDiv.classList.add(`size-div`, `size_${actualWidth}x${actualHeight}`);
+
+      const dimensionsDiv = document.createElement("div");
+      dimensionsDiv.classList.add("dimensions-container");
+      dimensionsDiv.innerHTML = `<h5>Size ${actualWidth} x ${actualHeight}</h5>`;
+
+      const imageContainerDiv = document.createElement("div");
+      imageContainerDiv.classList.add("image-container");
+      imageContainerDiv.appendChild(imageDiv);
+
+      this.alphabetElement.appendChild(sizeDiv);
+      sizeDiv.appendChild(dimensionsDiv);
+      sizeDiv.appendChild(imageContainerDiv);
+    }
+
+    // sort the created div elements based on height
+    const sortedDivs = Array.from(
+      this.alphabetElement.getElementsByClassName("size-div")
+    ).sort((a, b) => {
+      const aClass = a.className.match(/size_(\d+)x(\d+)/);
+      const bClass = b.className.match(/size_(\d+)x(\d+)/);
+
+      if (aClass && aClass.length === 3 && bClass && bClass.length === 3) {
+        const aHeight = parseInt(aClass[2], 10);
+        const bHeight = parseInt(bClass[2], 10);
+
+        return bHeight - aHeight;
+      }
+
+      // if there is no class name, retain the same order
+      return 0;
     });
 
-    // check for an empty alphabet
+    // reorder the div elements in the alphabet
+    sortedDivs.forEach(sizeDiv => {
+      this.alphabetElement.appendChild(sizeDiv);
+    });
+
     this.updateButtonState();
-    // save the drawing in the browser's localStorage
     this.saveState();
 
     // create a temporary fabric.Canvas instance to render the fabric.js canvas content
@@ -202,16 +274,25 @@ export default class Canvas {
       }
     }
 
-    console.log(pxlArray);
     this.pxlData.push(pxlArray);
   }
 
   remove() {
-    this.selectedDrawings.forEach(drawing => {
+    this.alphabet.selected.forEach(drawing => {
+      const parent = drawing.parentElement.parentElement;
       drawing.remove();
+
+      // check parent element for content and remove it when empty
+      const drawings = parent
+        .getElementsByClassName("image-container")[0]
+        .getElementsByTagName("div");
+
+      if (drawings.length === 0) {
+        parent.remove();
+      }
     });
 
-    this.selectedDrawings.length = 0;
+    this.alphabet.selected.length = 0;
     this.updateButtonState();
     this.saveState();
   }
@@ -227,43 +308,44 @@ export default class Canvas {
   }
 
   saveState() {
+    const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
+
     localStorage.setItem(
       "drawings",
-      JSON.stringify(
-        Array.from(this.alphabetElement.children).map(
-          drawing => drawing.innerHTML
-        )
-      )
+      JSON.stringify(Array.from(sizeDivs).map(drawing => drawing.outerHTML))
     );
   }
 
   loadState() {
-    let state = localStorage.getItem("drawings");
+    let state = JSON.parse(localStorage.getItem("drawings"));
 
-    if (state) {
-      let data = JSON.parse(state);
+    if (state && state.length > 0) {
+      // clear existing content in the alphabet
+      this.alphabetElement.innerHTML = "";
 
-      data.forEach(item => {
-        const newDiv = document.createElement("div");
-        newDiv.innerHTML = item;
-        this.alphabetElement.appendChild(newDiv);
+      // create array of div elements from state
+      let array = state.map(drawing => {
+        const div = document.createElement("div");
+        div.innerHTML = drawing;
 
-        newDiv.addEventListener("click", () => {
-          if (!newDiv.classList.contains("selected")) {
-            newDiv.classList.add("selected");
-            this.selectedDrawings.push(newDiv);
-          } else if (newDiv.classList.contains("selected")) {
-            newDiv.classList.remove("selected");
-            let i = this.selectedDrawings.indexOf(newDiv);
+        return div;
+      });
 
-            if (i > -1) {
-              this.selectedDrawings.splice(i, 1);
-            }
-          }
+      // append the sorted div elements to the alphabet
+      array.forEach(div => {
+        this.alphabetElement.appendChild(div);
 
-          this.updateButtonState();
-        });
+        // add event listeners only to the images within the image-container
+        const images = div
+          .getElementsByClassName("image-container")[0]
+          .getElementsByTagName("div");
+
+        for (const image of images) {
+          image.addEventListener("click", () => this.alphabet.select(image));
+        }
       });
     }
+
+    this.updateButtonState();
   }
 }

@@ -190,8 +190,9 @@ export default class Toolbox {
   }
 
   floodFill(newColor, x, y) {
-    let canvas = this.canvas.toCanvasElement();
-    let ctx = canvas.getContext("2d");
+    let ctx = this.canvas
+      .toCanvasElement()
+      .getContext("2d", { wilLReadFrequently: true });
     let imageData = ctx.getImageData(
       0,
       0,
@@ -272,11 +273,23 @@ export default class Toolbox {
       }
     }
 
-    ctx.putImageData(imageData, 0, 0);
-    this.canvas.clear();
-    this.canvas.setBackgroundImage(
-      canvas.toDataURL(),
-      this.canvas.renderAll.bind(this.canvas)
-    );
+    // create new canvas element and draw the modified imageData onto it
+    let tempCanvas = document.createElement("canvas");
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    let tempCtx = tempCanvas.getContext("2d", { wilLReadFrequently: true });
+    tempCtx.putImageData(imageData, 0, 0);
+
+    // create new fabric image with new canvas as source
+    let newImage = this._canvas.newImage(tempCanvas);
+
+    // remove existing fabric object from canvas
+    this.canvas.remove(this.canvas.item(0));
+
+    // add the new fabric image to the canvas
+    this.canvas.add(newImage);
+
+    // render canvas to reflect the changes
+    this.canvas.renderAll();
   }
 }

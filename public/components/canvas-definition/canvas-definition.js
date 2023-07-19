@@ -3,6 +3,7 @@ export default class CanvasDef {
     this.toolbox = null;
     this._canvas = null;
     this.canvas = null;
+    this.grid = null;
     this.header = null;
     this.gridSize = null;
     this.clearBtn = null;
@@ -21,6 +22,7 @@ export default class CanvasDef {
 
   render() {
     this.canvas = this.toolbox.canvas;
+    this.grid = this._canvas.grid;
     this.gridSize = this.toolbox.gridSize;
 
     this.canvasWidth = document.getElementById("canvas-width");
@@ -38,22 +40,28 @@ export default class CanvasDef {
   }
 
   create() {
-    if (this._canvas.canvas) {
-      this._canvas.canvas.dispose();
-      this._canvas.canvas = null;
-    }
+    this.canvas.clear();
+    this.canvas.setDimensions({
+      width: this.canvasWidth.value * this.gridSize,
+      height: this.canvasHeight.value * this.gridSize
+    });
+    this.canvas.renderAll.bind(this.canvas);
+    this.grid.setDimensions({
+      width: this.canvasWidth.value * this.gridSize,
+      height: this.canvasHeight.value * this.gridSize
+    });
 
-    this._canvas.render(
-      this.canvasWidth.value * this.gridSize,
-      this.canvasHeight.value * this.gridSize
-    );
-    this._canvas.canvas.setWidth(this.canvasWidth.value * this.gridSize);
-    this._canvas.canvas.setHeight(this.canvasHeight.value * this.gridSize);
+    // this._canvas.render(
+    //   this.canvasWidth.value * this.gridSize,
+    //   this.canvasHeight.value * this.gridSize
+    // );
+    // this._canvas.canvas.setWidth(this.canvasWidth.value * this.gridSize);
+    // this._canvas.canvas.setHeight(this.canvasHeight.value * this.gridSize);
 
-    this.toolbox.render();
-    this.header.render();
+    // this.toolbox.render();
+    // this.header.render();
     this.header.undoStack = [];
     this.header.redoStack = [];
-    this.render();
+    // this.render();
   }
 }

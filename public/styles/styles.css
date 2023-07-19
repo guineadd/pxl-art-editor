@@ -47,12 +47,48 @@ body {
   margin: 0;
 }
 
-#alphabet div {
-  margin: 2px;
+.size-div {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin: 0;
+}
+
+.imageDiv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  width: 35px;
+  height: 35px;
 }
 
 #alphabet .selected {
-  border: 1px solid #7c3449;
+  background-color: #853c51;
+  border: #853c51;
+}
+
+.dimensions-container {
+  display: flex;
+  height: 30px;
+  margin: 0;
+}
+
+.image-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 390px;
+  margin: 0;
+}
+
+.image-container div {
+  border: 1px solid black;
+}
+
+.image-container div:hover {
+  cursor: pointer;
+  box-shadow: 0 0 10px #b68b97;
 }
 
 @media screen and (max-width: 768px) {
