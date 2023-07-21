@@ -9,7 +9,7 @@ export default class Header {
     this.undoBtn = null;
     this.redoBtn = null;
     this.exportBtn = null;
-    this.pxlData = null;
+    this.exportData = null;
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
     this.export = this.export.bind(this);
@@ -63,11 +63,11 @@ export default class Header {
   }
 
   export() {
-    this.pxlData = this._canvas.pxlData;
+    this.exportData = this._canvas.exportData;
     let width = document.getElementById("canvas-width");
     let height = document.getElementById("canvas-height");
 
-    this.generateCppFile(this.pxlData, width.value, height.value);
+    this.generateCppFile(this.exportData, width.value, height.value);
   }
 
   generateCppFile(data, width, height) {

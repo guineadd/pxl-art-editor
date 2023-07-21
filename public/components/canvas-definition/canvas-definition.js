@@ -45,7 +45,7 @@ export default class CanvasDef {
       width: this.canvasWidth.value * this.gridSize,
       height: this.canvasHeight.value * this.gridSize
     });
-    this.canvas.renderAll.bind(this.canvas);
+    // this.canvas.renderAll.bind(this.canvas);
     this.grid.setDimensions({
       width: this.canvasWidth.value * this.gridSize,
       height: this.canvasHeight.value * this.gridSize

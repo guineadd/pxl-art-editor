@@ -54,7 +54,7 @@ body {
   margin: 0;
 }
 
-.imageDiv {
+.image-div {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -71,7 +71,12 @@ body {
 .dimensions-container {
   display: flex;
   height: 30px;
-  margin: 0;
+}
+
+.dimensions-container h5:hover {
+  cursor: pointer;
+  border: transparent;
+  box-shadow: 0 0 10px #b68b97;
 }
 
 .image-container {

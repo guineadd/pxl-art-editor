@@ -10,7 +10,9 @@ export default class Alphabet {
     this._canvas = canvas;
   }
 
-  render() {}
+  render() {
+    this.alphabet = document.getElementById("alphabet");
+  }
 
   select(div) {
     if (!div.classList.contains("selected")) {
@@ -26,5 +28,21 @@ export default class Alphabet {
     }
 
     this._canvas.updateButtonState();
+  }
+
+  labelOnOff(div) {
+    if (div.parentElement.classList.contains("enabled")) {
+      div.parentElement.classList.remove("enabled");
+      div.parentElement.classList.add("disabled");
+
+      div.parentElement.style = "order: 10; opacity: 0.5;";
+      div.nextElementSibling.style = "pointer-events: none";
+    } else if (div.parentElement.classList.contains("disabled")) {
+      div.parentElement.classList.remove("disabled");
+      div.parentElement.classList.add("enabled");
+
+      div.parentElement.style = "order: unset; opacity: unset;";
+      div.nextElementSibling.style = "pointer-events: unset";
+    }
   }
 }

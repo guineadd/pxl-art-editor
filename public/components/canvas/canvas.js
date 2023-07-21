@@ -10,9 +10,16 @@ export default class Canvas {
     this.gridSize = 20;
     this.saveBtn = null;
     this.removeBtn = null;
+    this.counter = null;
     this.save = this.save.bind(this);
     this.remove = this.remove.bind(this);
-    this.pxlData = [];
+    this.exportData = [];
+    this.savedDimensions = [];
+    this.pxlData = {
+      width: null,
+      height: null,
+      data: []
+    };
     this.selectedDrawings = [];
   }
 
@@ -66,6 +73,7 @@ export default class Canvas {
     this.removeBtn = document.getElementById("remove-btn");
     this.saveBtn.addEventListener("click", this.save);
     this.removeBtn.addEventListener("click", this.remove);
+    this.counter = 1;
 
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
@@ -136,8 +144,23 @@ export default class Canvas {
       10
     );
 
-    // let imageWidth = 0;
-    // let imageHeight = 0;
+    // this.uniqueDimensions = [];
+
+    const dimensions = {
+      width: actualWidth,
+      height: actualHeight
+    };
+
+    // filter the array to remove duplicate dimensions
+    let duplicateDimensions = this.savedDimensions.findIndex(
+      dim => dim.width === dimensions.width && dim.height === dimensions.height
+    );
+
+    if (duplicateDimensions === -1) {
+      this.savedDimensions.push(dimensions);
+    } else {
+      this.savedDimensions[duplicateDimensions] = dimensions;
+    }
 
     // convert the canvas to a data URL
     const dataURL = this.canvas.toDataURL();
@@ -146,20 +169,12 @@ export default class Canvas {
     const image = new Image();
     image.src = dataURL;
 
-    // if (actualWidth > actualHeight) {
-    //   imageWidth = 25;
-    //   imageHeight = (actualHeight / actualWidth) * 25;
-    // } else {
-    //   imageWidth = (actualWidth / actualHeight) * 25;
-    //   imageHeight = 25;
-    // }
-
     image.width = 25;
     image.height = 25;
 
     // create div to contain the image
     const imageDiv = document.createElement("div");
-    imageDiv.classList.add("imageDiv");
+    imageDiv.classList.add(`image-div`, `image-${this.counter}`);
     imageDiv.appendChild(image);
 
     // event listener to add the .selected class on click
@@ -194,7 +209,11 @@ export default class Canvas {
     // if there is no match, create a new div
     if (!matching) {
       const sizeDiv = document.createElement("div");
-      sizeDiv.classList.add(`size-div`, `size_${actualWidth}x${actualHeight}`);
+      sizeDiv.classList.add(
+        `size-div`,
+        `size_${actualWidth}x${actualHeight}`,
+        `enabled`
+      );
 
       const dimensionsDiv = document.createElement("div");
       dimensionsDiv.classList.add("dimensions-container");
@@ -207,6 +226,11 @@ export default class Canvas {
       this.alphabetElement.appendChild(sizeDiv);
       sizeDiv.appendChild(dimensionsDiv);
       sizeDiv.appendChild(imageContainerDiv);
+
+      let dimensions = sizeDiv.childNodes[0];
+      dimensions.addEventListener("click", () => {
+        this.alphabet.labelOnOff(dimensions);
+      });
     }
 
     // sort the created div elements based on height
@@ -232,9 +256,6 @@ export default class Canvas {
       this.alphabetElement.appendChild(sizeDiv);
     });
 
-    this.updateButtonState();
-    this.saveState();
-
     // create a temporary fabric.Canvas instance to render the fabric.js canvas content
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = actualWidth;
@@ -248,7 +269,11 @@ export default class Canvas {
       actualHeight
     );
 
-    const pxlArray = [];
+    const pxlArray = {
+      id: null,
+      data: []
+    };
+    this.pxlData.data = [];
 
     for (let x = 0; x < actualWidth; x++) {
       let exp = 0;
@@ -267,20 +292,55 @@ export default class Canvas {
         byte += bit * Math.pow(2, exp++);
 
         if (exp === byteSize || y === actualHeight - 1) {
-          pxlArray.push(byte);
+          pxlArray.data.push(byte);
           byte = 0;
           exp = 0;
         }
       }
     }
 
-    this.pxlData.push(pxlArray);
+    pxlArray.id = this.counter;
+    this.pxlData.width = dimensions.width;
+    this.pxlData.height = dimensions.height;
+    this.pxlData.data.push(pxlArray);
+
+    let duplicateData = this.exportData.findIndex(
+      drawing =>
+        drawing.width === this.pxlData.width &&
+        drawing.height === this.pxlData.height
+    );
+
+    if (duplicateData !== -1) {
+      this.exportData[duplicateData].data.push(pxlArray);
+    } else if (duplicateData === -1) {
+      this.exportData.push({ ...this.pxlData });
+    }
+
+    this.updateButtonState();
+    this.saveState();
+    this.counter++;
   }
 
   remove() {
     this.alphabet.selected.forEach(drawing => {
+      // remove the selected drawings' DOM element
       const parent = drawing.parentElement.parentElement;
+      let elementId = parseInt(drawing.classList[1].match(/\d+/)[0], 10);
       drawing.remove();
+
+      // remove the selected drawings' pixel data
+      this.exportData.forEach(item => {
+        item.data = item.data.filter(x => x.id !== elementId);
+      });
+
+      // check pixel data and remove empty sets
+      let tempData = this.exportData;
+      tempData.forEach(item => {
+        if (item.data.length === 0) {
+          let idx = this.exportData.indexOf(item);
+          this.exportData.splice(idx, 1);
+        }
+      });
 
       // check parent element for content and remove it when empty
       const drawings = parent
@@ -309,15 +369,21 @@ export default class Canvas {
 
   saveState() {
     const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
+    const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
 
-    localStorage.setItem(
-      "drawings",
-      JSON.stringify(Array.from(sizeDivs).map(drawing => drawing.outerHTML))
-    );
+    localStorage.setItem("drawings", JSON.stringify(data));
+    localStorage.setItem("drawingsData", JSON.stringify(this.exportData));
+    localStorage.setItem("drawingNum", JSON.stringify(this.counter));
   }
 
   loadState() {
     let state = JSON.parse(localStorage.getItem("drawings"));
+    this.exportData = localStorage.getItem("drawingsData")
+      ? JSON.parse(localStorage.getItem("drawingsData"))
+      : [];
+    this.counter = localStorage.getItem("drawingNum")
+      ? Number(localStorage.getItem("drawingNum"))
+      : 1;
 
     if (state && state.length > 0) {
       // clear existing content in the alphabet
@@ -325,10 +391,12 @@ export default class Canvas {
 
       // create array of div elements from state
       let array = state.map(drawing => {
-        const div = document.createElement("div");
-        div.innerHTML = drawing;
+        // const div = document.createElement("div");
+        // div.innerHTML = drawing;
+        const parser = new DOMParser();
+        const div = parser.parseFromString(drawing, "text/html");
 
-        return div;
+        return div.body.firstChild;
       });
 
       // append the sorted div elements to the alphabet
@@ -343,6 +411,11 @@ export default class Canvas {
         for (const image of images) {
           image.addEventListener("click", () => this.alphabet.select(image));
         }
+
+        let dimensions = div.childNodes[0];
+        dimensions.addEventListener("click", () => {
+          this.alphabet.labelOnOff(dimensions);
+        });
       });
     }
 
