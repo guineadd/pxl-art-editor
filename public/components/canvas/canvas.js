@@ -21,6 +21,11 @@ export default class Canvas {
       data: []
     };
     this.selectedDrawings = [];
+    this.state = {
+      elements: null,
+      hex: null,
+      counter: null
+    };
   }
 
   setComponents(alphabet) {
@@ -349,6 +354,7 @@ export default class Canvas {
 
       if (drawings.length === 0) {
         parent.remove();
+        this.counter = 1;
       }
     });
 
@@ -371,54 +377,70 @@ export default class Canvas {
     const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
     const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
 
+    this.state = {
+      elements: data,
+      hex: this.exportData,
+      counter: this.counter
+    };
+    // save to local storage
     localStorage.setItem("drawings", JSON.stringify(data));
     localStorage.setItem("drawingsData", JSON.stringify(this.exportData));
     localStorage.setItem("drawingNum", JSON.stringify(this.counter));
+
+    // save to state internally
+    fetch(`/save-data`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(this.state)
+    }).catch(err => console.error(`Error saving data: ${err}`));
   }
 
-  loadState() {
-    let state = JSON.parse(localStorage.getItem("drawings"));
-    this.exportData = localStorage.getItem("drawingsData")
-      ? JSON.parse(localStorage.getItem("drawingsData"))
-      : [];
-    this.counter = localStorage.getItem("drawingNum")
-      ? Number(localStorage.getItem("drawingNum"))
-      : 1;
+  async loadState() {
+    try {
+      const response = await fetch(`/get-data`);
+      this.state = await response.json();
+      this.exportData = this.state.hex === null ? [] : this.state.hex;
+      this.counter = this.state.counter === null ? 1 : this.state.counter;
 
-    if (state && state.length > 0) {
-      // clear existing content in the alphabet
-      this.alphabetElement.innerHTML = "";
+      if (this.state.elements && this.state.elements.length > 0) {
+        // clear existing content in the alphabet
+        this.alphabetElement.innerHTML = "";
 
-      // create array of div elements from state
-      let array = state.map(drawing => {
-        // const div = document.createElement("div");
-        // div.innerHTML = drawing;
-        const parser = new DOMParser();
-        const div = parser.parseFromString(drawing, "text/html");
+        // create array of div elements from state
+        let array = this.state.elements.map(drawing => {
+          // const div = document.createElement("div");
+          // div.innerHTML = drawing;
+          const parser = new DOMParser();
+          const div = parser.parseFromString(drawing, "text/html");
 
-        return div.body.firstChild;
-      });
-
-      // append the sorted div elements to the alphabet
-      array.forEach(div => {
-        this.alphabetElement.appendChild(div);
-
-        // add event listeners only to the images within the image-container
-        const images = div
-          .getElementsByClassName("image-container")[0]
-          .getElementsByTagName("div");
-
-        for (const image of images) {
-          image.addEventListener("click", () => this.alphabet.select(image));
-        }
-
-        let dimensions = div.childNodes[0];
-        dimensions.addEventListener("click", () => {
-          this.alphabet.labelOnOff(dimensions);
+          return div.body.firstChild;
         });
-      });
-    }
 
-    this.updateButtonState();
+        // append the sorted div elements to the alphabet
+        array.forEach(div => {
+          this.alphabetElement.appendChild(div);
+
+          // add event listeners only to the images within the image-container
+          const images = div
+            .getElementsByClassName("image-container")[0]
+            .getElementsByTagName("div");
+
+          for (const image of images) {
+            image.addEventListener("click", () => this.alphabet.select(image));
+          }
+
+          let dimensions = div.childNodes[0];
+          dimensions.addEventListener("click", () => {
+            this.alphabet.labelOnOff(dimensions);
+          });
+        });
+      }
+
+      this.updateButtonState();
+    } catch (err) {
+      console.error(`Error loading data: ${err}`);
+    }
   }
 }

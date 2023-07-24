@@ -27,14 +27,47 @@ app.get("/", (req, res) => {
 });
 
 app.get("/get-data", (req, res) => {
-  const data = readFromDb();
-  res.json(data);
+  const dataFilePath = path.join(__dirname, "db.json");
+  try {
+    const data = fs.readFileSync(dataFilePath, "utf8");
+    const jsonData = JSON.parse(data);
+    res.json(jsonData);
+  } catch (err) {
+    console.error(`Error reading data from file: ${err}`);
+    res.status(500).json({ error: "Error reading data from file." });
+  }
 });
 
 app.post("/save-data", (req, res) => {
-  const toWrite = req.body;
-  writeToDb(toWrite);
+  const dataToWrite = req.body;
+  const dataFilePath = path.join(__dirname, "db.json");
+  try {
+    fs.writeFileSync(
+      dataFilePath,
+      JSON.stringify(dataToWrite, null, 2),
+      "utf8"
+    );
+  } catch (err) {
+    console.error(`Error writing data to file: ${err}`);
+  }
+
   res.send("Data saved successfully.");
+});
+
+app.post("/delete-data", (req, res) => {
+  try {
+    const dataFilePath = path.join(__dirname, "db.json");
+    const newData = {
+      elements: [],
+      hex: [],
+      counter: 1
+    };
+    fs.writeFileSync(dataFilePath, JSON.stringify(newData, null, 2), "utf8");
+    res.send("Data deleted successfully.");
+  } catch (err) {
+    console.error(`Error deleting data: ${err}`);
+    res.status(500).send("Error deleting data.");
+  }
 });
 
 const port = 3000;
@@ -42,26 +75,5 @@ const port = 3000;
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
-
-function writeToDb(data) {
-  const filePath = path.join(__dirname, "db.json");
-
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error(`Error writing data to file: ${err}`);
-  }
-}
-
-function readFromDb() {
-  const filePath = path.join(__dirname, "db.json");
-  try {
-    const data = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(data);
-  } catch (err) {
-    console.error(`Error reading data from file: ${err}`);
-    return null;
-  }
-}
 
 module.exports = {};
