@@ -234,7 +234,7 @@ export default class Canvas {
 
       let dimensions = sizeDiv.childNodes[0];
       dimensions.addEventListener("click", () => {
-        this.alphabet.labelOnOff(dimensions);
+        this.alphabet.labelOnOff(dimensions, this.exportData);
       });
     }
 
@@ -433,7 +433,7 @@ export default class Canvas {
 
           let dimensions = div.childNodes[0];
           dimensions.addEventListener("click", () => {
-            this.alphabet.labelOnOff(dimensions);
+            this.alphabet.labelOnOff(dimensions, this.exportData);
           });
         });
       }
