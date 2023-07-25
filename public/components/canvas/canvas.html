@@ -1,9 +1,14 @@
 <div class="canvas flex justify-center items-center bg-[#ddd] border border-none w-[500px] h-[500px] col-start-1 col-end-6 row-start-2 row-end-7">
   <div class="canvas-box relative bg-white">
-    <canvas width="500" height="500" id="canvas" class=""></canvas>
+    <canvas width="500" height="500" id="canvas"></canvas>
     <canvas id="grid" class="grid top-0 left-0 absolute pointer-events-none"></canvas>
   </div>
 </div>
-<div class="save-btn grid grid-cols-6 col-start-7 col-end-9 row-start-2 row-end-7 justify-center items-center">
-  <span class="col-start-2 text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer"><i class="fa fa-circle-arrow-right"></i></span>
+<div class="save-btn grid grid-cols-6 col-start-7 col-end-9 row-start-2 row-end-7 items-center">
+  <button id="save-btn" class="col-start-2 text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4 self-end">
+    <i class="fa fa-circle-arrow-right"></i>
+  </button>
+  <button id="remove-btn" class="col-start-2 text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4 self-start">
+    <i class="fa fa-ban"></i>
+  </button>
 </div>

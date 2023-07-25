@@ -1,3 +1,78 @@
 export default class Alphabet {
-  render() {}
+  constructor() {
+    this.canvas = null;
+    this._canvas = null;
+    this.alphabet = null;
+    this.selected = [];
+    this.disabled = [];
+  }
+
+  setComponents(canvas) {
+    this._canvas = canvas;
+  }
+
+  render() {
+    this.alphabet = document.getElementById("alphabet");
+  }
+
+  select(div) {
+    if (!div.classList.contains("selected")) {
+      div.classList.add("selected");
+      this.selected.push(div);
+    } else if (div.classList.contains("selected")) {
+      div.classList.remove("selected");
+      let i = this.selected.indexOf(div);
+
+      if (i > -1) {
+        this.selected.splice(i, 1);
+      }
+    }
+
+    this._canvas.updateButtonState();
+  }
+
+  labelOnOff(div, data) {
+    let dimensions = div.parentElement.classList[1].split("_")[1].split("x");
+    let width = parseInt(dimensions[0], 10);
+    let height = parseInt(dimensions[1], 10);
+
+    if (div.parentElement.classList.contains("enabled")) {
+      div.parentElement.classList.remove("enabled");
+      div.parentElement.classList.add("disabled");
+
+      div.parentElement.style = "order: 10; opacity: 0.5;";
+      div.nextElementSibling.style = "pointer-events: none";
+
+      data = data.filter(obj => {
+        if (obj.width === width && obj.height === height) {
+          this.disabled.push(obj);
+          return false;
+        }
+
+        return true;
+      });
+    } else if (div.parentElement.classList.contains("disabled")) {
+      div.parentElement.classList.remove("disabled");
+      div.parentElement.classList.add("enabled");
+
+      div.parentElement.style = "order: unset; opacity: unset;";
+      div.nextElementSibling.style = "pointer-events: unset";
+
+      this.disabled.forEach((obj, idx) => {
+        if (obj.width === width && obj.height === height) {
+          data.push(obj);
+          this.disabled.splice(idx, 1);
+        }
+      });
+
+      data.forEach((obj, idx) => {
+        if (data.indexOf(obj) !== idx) {
+          data.splice(idx, 1);
+        }
+      });
+    }
+
+    this._canvas.exportData = data;
+    this._canvas.saveState();
+  }
 }

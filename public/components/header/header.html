@@ -10,13 +10,29 @@
     </span>
   </div>
   <div class="col-start-2 grid grid-cols-6">
+    <span id="new-btn" class="col-start-4 grid grid-cols-4 custom-action group hover:cursor-pointer">
+      <i class="flex self-center fa-solid fa-file-circle-plus col-start-1 col-end-2 group-hover:text-gray-400"></i>
+      <span class="group-hover:text-gray-400">NEW</span>
+    </span>
     <span class="col-start-5 grid grid-cols-4 load-action group hover:cursor-pointer">
       <i class="flex self-center fa fa-folder-open col-start-1 col-end-2 group-hover:text-gray-400"></i>
       <span class="group-hover:text-gray-400">LOAD</span>
     </span>
-    <span class="col-start-6 grid grid-cols-4 export-action group hover:cursor-pointer">
+    <span id="export-btn" class="col-start-6 grid grid-cols-4 export-action group hover:cursor-pointer">
       <i class="flex self-center fa fa-file-export col-start-1 col-end-2 group-hover:text-gray-400"></i>
       <span class="group-hover:text-gray-400">EXPORT</span>
     </span>
+  </div>
+  <!-- confirmation modal for new project -->
+  <div id="modal-container" class="fixed inset-0 z-50 hidden outline-none">
+    <div class="bg fixed top-0 left-0 z-40 w-screen h-screen flex justify-center items-center backdrop-opacity-10 bg-black/30">
+      <div id="modal" class="bg-white p-8 rounded-md h-[200px] w-[600px] transition-opacity duration-300">
+        <p class="text-lg font-semibold mb-4 text-black">Are you sure you want to start a new project? All progress will be lost.</p>
+        <div class="flex justify-end">
+          <button id="confirm-modal-btn" class="px-4 py-2 mr-2 bg-secondary-normal text-white rounded hover:bg-secondary-hover">OK</button>
+          <button id="cancel-modal-btn" class="px-4 py-2 bg-header-normal text-white rounded hover:bg-header-hover">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>

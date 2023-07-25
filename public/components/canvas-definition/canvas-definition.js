@@ -3,6 +3,7 @@ export default class CanvasDef {
     this.toolbox = null;
     this._canvas = null;
     this.canvas = null;
+    this.grid = null;
     this.header = null;
     this.gridSize = null;
     this.clearBtn = null;
@@ -20,8 +21,9 @@ export default class CanvasDef {
   }
 
   render() {
-    this.canvas = this.toolbox.canvas;
-    this.gridSize = this.toolbox.gridSize;
+    this.canvas = this._canvas.canvas;
+    this.grid = this._canvas.grid;
+    this.gridSize = this._canvas.gridSize;
 
     this.canvasWidth = document.getElementById("canvas-width");
     this.canvasHeight = document.getElementById("canvas-height");
@@ -30,30 +32,38 @@ export default class CanvasDef {
     this.createBtn = document.getElementById("create-btn");
     this.clearBtn.addEventListener("click", this.clear);
     this.createBtn.addEventListener("click", this.create);
+
+    document.addEventListener("keypress", event => {
+      if (
+        document.activeElement === this.canvasWidth ||
+        document.activeElement === this.canvasHeight
+      ) {
+        if (event.key === "Enter") {
+          this.create();
+        }
+      }
+    });
   }
 
   clear() {
     this.toolbox.saveCanvasState();
     this.canvas.clear();
+    this.canvas.backgroundColor = "rgba(255, 255, 255, 255)";
   }
 
   create() {
-    if (this._canvas.canvas) {
-      this._canvas.canvas.dispose();
-      this._canvas.canvas = null;
-    }
+    this.canvas.clear();
+    this.canvas.setDimensions({
+      width: this.canvasWidth.value * this.gridSize,
+      height: this.canvasHeight.value * this.gridSize
+    });
+    this.canvas.backgroundColor = "rgba(255, 255, 255, 255)";
+    this.grid.setDimensions({
+      width: this.canvasWidth.value * this.gridSize,
+      height: this.canvasHeight.value * this.gridSize
+    });
 
-    this._canvas.render(
-      this.canvasWidth.value * this.gridSize,
-      this.canvasHeight.value * this.gridSize
-    );
-    this._canvas.canvas.setWidth(this.canvasWidth.value * this.gridSize);
-    this._canvas.canvas.setHeight(this.canvasHeight.value * this.gridSize);
-
-    this.toolbox.render();
-    this.header.render();
     this.header.undoStack = [];
     this.header.redoStack = [];
-    this.render();
   }
 }
