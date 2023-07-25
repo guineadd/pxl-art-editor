@@ -2,6 +2,7 @@
   "name": "pxl-art-editor",
   "version": "1.0.0",
   "description": "Basic Pixel Art Editor with load and export files functionality",
+  "type": "module",
   "homepage": "",
   "author": "A. Kalogeras, D. Kyprianou",
   "files": [

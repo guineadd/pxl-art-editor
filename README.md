@@ -10,7 +10,7 @@ $ npm install --save pxl-art-editor
 ## Usage
 
 ```js
-const pxlArtEditor = require('pxl-art-editor');
+import pxlArtEditor from "pxl-art-editor";
 
 pxlArtEditor('Rainbow');
 ```

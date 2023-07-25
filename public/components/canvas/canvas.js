@@ -322,8 +322,8 @@ export default class Canvas {
     }
 
     this.updateButtonState();
-    this.saveState();
     this.counter++;
+    this.saveState();
   }
 
   remove() {

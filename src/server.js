@@ -1,8 +1,8 @@
-"use strict";
-const express = require("express");
+import express from "express";
+import path from "path";
+import fs from "fs/promises";
+
 const app = express();
-const path = require("path");
-const fs = require("fs");
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -11,7 +11,7 @@ app.use(
   "/webfonts",
   express.static(
     path.join(
-      __dirname,
+      path.resolve(),
       "node_modules",
       "@fortawesome/fontawesome-free/webfonts"
     )
@@ -19,17 +19,17 @@ app.use(
 );
 
 app.get("/favicon.ico", (req, res) => {
-  res.sendFile(path.join(__dirname, "../favicon.ico"));
+  res.sendFile(path.join(path.resolve(), "/favicon.ico"));
 });
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+  res.sendFile(path.join(path.resolve(), "/public/index.html"));
 });
 
-app.get("/get-data", (req, res) => {
-  const dataFilePath = path.join(__dirname, "db.json");
+app.get("/get-data", async (req, res) => {
+  const dataFilePath = path.join(path.resolve(), "/src/db.json");
   try {
-    const data = fs.readFileSync(dataFilePath, "utf8");
+    const data = await fs.readFile(dataFilePath, "utf8");
     const jsonData = JSON.parse(data);
     res.json(jsonData);
   } catch (err) {
@@ -38,11 +38,11 @@ app.get("/get-data", (req, res) => {
   }
 });
 
-app.post("/save-data", (req, res) => {
+app.post("/save-data", async (req, res) => {
   const dataToWrite = req.body;
-  const dataFilePath = path.join(__dirname, "db.json");
+  const dataFilePath = path.join(path.resolve(), "/src/db.json");
   try {
-    fs.writeFileSync(
+    await fs.writeFile(
       dataFilePath,
       JSON.stringify(dataToWrite, null, 2),
       "utf8"
@@ -54,15 +54,15 @@ app.post("/save-data", (req, res) => {
   res.send("Data saved successfully.");
 });
 
-app.post("/delete-data", (req, res) => {
+app.post("/delete-data", async (req, res) => {
   try {
-    const dataFilePath = path.join(__dirname, "db.json");
+    const dataFilePath = path.join(path.resolve(), "/src/db.json");
     const newData = {
       elements: [],
       hex: [],
       counter: 1
     };
-    fs.writeFileSync(dataFilePath, JSON.stringify(newData, null, 2), "utf8");
+    await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2), "utf8");
     res.send("Data deleted successfully.");
   } catch (err) {
     console.error(`Error deleting data: ${err}`);
@@ -75,5 +75,3 @@ const port = 3000;
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
-
-module.exports = {};
