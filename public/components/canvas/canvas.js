@@ -149,8 +149,6 @@ export default class Canvas {
       10
     );
 
-    // this.uniqueDimensions = [];
-
     const dimensions = {
       width: actualWidth,
       height: actualHeight

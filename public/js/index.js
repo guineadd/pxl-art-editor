@@ -35,7 +35,7 @@ const canvasDef = new CanvasDef(toolbox);
 
 canvas.setComponents(alphabet);
 toolbox.setComponents(header, canvas);
-header.setComponents(canvas);
+header.setComponents(canvas, alphabet);
 canvasDef.setComponents(toolbox, canvas, header);
 alphabet.setComponents(canvas);
 

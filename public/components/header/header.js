@@ -12,15 +12,37 @@ export default class Header {
     this.redoBtn = null;
     this.exportBtn = null;
     this.exportData = null;
+    this.exportDataObj = {
+      width: null,
+      height: null,
+      data: [
+        {
+          id: null,
+          data: []
+        }
+      ]
+    };
     this.newBtn = null;
+    this.loadBtn = null;
+    this.newPressed = false;
+    this.loadPressed = false;
+    this.loadFile = null;
+    this.alphabetElement = null;
+    this.file = null;
+    this.convWidth = null;
+    this.convHeight = null;
+    this.dataArray = [];
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
     this.export = this.export.bind(this);
-    this.new = this.new.bind(this);
+    // this.new = this.newOrLoad.bind(this);
+    // this.load = this.load.bind(this);
+    this.content = this.content.bind(this);
   }
 
-  setComponents(canvas) {
+  setComponents(canvas, alphabet) {
     this._canvas = canvas;
+    this.alphabet = alphabet;
   }
 
   render() {
@@ -32,10 +54,22 @@ export default class Header {
     this.redoBtn = document.getElementById("redo-btn");
     this.exportBtn = document.getElementById("export-btn");
     this.newBtn = document.getElementById("new-btn");
+    this.loadBtn = document.getElementById("load-btn");
+    this.loadFile = document.getElementById("load-file");
+    this.alphabetElement = document.getElementById("alphabet");
     this.undoBtn.addEventListener("click", this.undo);
     this.redoBtn.addEventListener("click", this.redo);
     this.exportBtn.addEventListener("click", this.export);
-    this.newBtn.addEventListener("click", this.new);
+    this.newBtn.addEventListener("click", () => {
+      this.loadPressed = false;
+      this.newPressed = true;
+      this.newOrLoad();
+    });
+    this.loadBtn.addEventListener("click", () => {
+      this.newPressed = false;
+      this.loadPressed = true;
+      this.newOrLoad();
+    });
 
     document.addEventListener("keypress", event => {
       if (event.ctrlKey) {
@@ -80,45 +114,75 @@ export default class Header {
     }
   }
 
-  new() {
+  closeModalClick(e, modal, cancel, container) {
+    if (!modal.contains(e.target) || e.target === cancel) {
+      container.classList.add("hidden");
+      this.newPressed = false;
+      this.loadPressed = false;
+    }
+  }
+
+  closeModalEsc(e, container) {
+    if (e.key === "Escape") {
+      container.classList.add("hidden");
+      this.newPressed = false;
+      this.loadPressed = false;
+    }
+  }
+
+  newOrLoad() {
     const modalContainer = document.getElementById("modal-container");
     const modal = document.getElementById("modal");
     const confirmBtn = document.getElementById("confirm-modal-btn");
     const cancelBtn = document.getElementById("cancel-modal-btn");
+    let modalMsg = document.querySelector("#modal p");
 
-    modalContainer.removeEventListener("click", modalContainerEvent);
-    document.removeEventListener("keyup", modalEvent);
+    modalContainer.removeEventListener("click", e =>
+      this.closeModalClick(e, modal, cancelBtn, modalContainer)
+    );
+    document.removeEventListener("keyup", e =>
+      this.closeModalEsc(e, modalContainer)
+    );
+
+    if (this.newPressed) {
+      modalMsg.innerHTML =
+        "Are you sure you want to start a new project? All progress will be lost.";
+    } else if (this.loadPressed) {
+      modalMsg.innerHTML =
+        "Are you sure you want to load a new file? All progress will be lost.";
+    }
+
     modalContainer.classList.remove("hidden");
 
-    function modalContainerEvent(e) {
-      if (!modal.contains(e.target) || e.target === cancelBtn) {
-        modalContainer.classList.add("hidden");
-      }
-    }
+    modalContainer.addEventListener("click", e =>
+      this.closeModalClick(e, modal, cancelBtn, modalContainer)
+    );
+    document.addEventListener("keyup", e =>
+      this.closeModalEsc(e, modalContainer)
+    );
 
-    function modalEvent(e) {
-      if (e.key === "Escape") {
-        modalContainer.classList.add("hidden");
-      }
-    }
+    confirmBtn.addEventListener("click", async () => {
+      try {
+        await fetch(`/delete-data`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
 
-    modalContainer.addEventListener("click", modalContainerEvent);
-    document.addEventListener("keyup", modalEvent);
-
-    confirmBtn.addEventListener("click", () => {
-      fetch(`/delete-data`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-        .then(() => {
-          document.getElementById("alphabet").innerHTML = "";
+        document.getElementById("alphabet").innerHTML = "";
+        // reset canvas to initial dimensions
+        this.canvas.clear();
+        this.canvas.backgroundColor = "rgba(255, 255, 255, 255)";
+        // clear local storage and reinitialize state data
+        this.undoStack = [];
+        this.redoStack = [];
+        localStorage.clear();
+        this._canvas.exportData = [];
+        this._canvas.counter = 1;
+        if (this.newPressed) {
           document.getElementById("canvas-width").value = 25;
           document.getElementById("canvas-height").value = 25;
-          // reset canvas to initial dimensions
-          this.canvas.clear();
-          this.canvas.backgroundColor = "rgba(255, 255, 255, 255)";
           this.canvas.setDimensions({
             width: 25 * this.gridSize,
             height: 25 * this.gridSize
@@ -127,24 +191,174 @@ export default class Header {
             width: 25 * this.gridSize,
             height: 25 * this.gridSize
           });
-
-          this.undoStack = [];
-          this.redoStack = [];
-          // clear local storage and reinitialize state data
-          localStorage.clear();
-          this._canvas.exportData = [];
-          this._canvas.counter = 1;
-        })
-        .catch(err => console.error(`Error deleting data: ${err}`));
+          this.newPressed = false;
+        } else if (this.loadPressed) {
+          console.log(`Hi`);
+          this.load();
+          this.loadPressed = false;
+        }
+      } catch (err) {
+        console.error(`Error deleting data: ${err}`);
+      }
 
       modalContainer.classList.add("hidden");
     });
+  }
+
+  load() {
+    this.loadFile.value = "";
+    this.loadFile.removeEventListener("change", this.content);
+    this.loadFile.click();
+    this.loadFile.addEventListener("change", this.content);
+  }
+
+  content() {
+    if (this.loadFile.files.length > 0) {
+      const file = this.loadFile.files[0];
+      const reader = new FileReader();
+
+      reader.onload = event => {
+        const fileContent = event.target.result;
+
+        this.file = fileContent;
+        this.parseFile();
+        this.file2image();
+      };
+
+      reader.readAsText(file);
+    } else {
+      console.error(`Please select a file.`);
+    }
+  }
+
+  file2image() {
+    this.exportDataObj.width = 0;
+    this.exportDataObj.height = 0;
+    this.exportDataObj.data = [];
+    const hexData = this.dataArray;
+    const canvas = document.createElement("canvas");
+    canvas.width = this.convWidth;
+    canvas.height = this.convHeight;
+    const context = canvas.getContext("2d");
+
+    let sizeDiv = `
+        <div class="size-div size_${this.convWidth}x${this.convHeight} enabled" style="order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;">
+            <div class="dimensions-container" style="display: flex; margin: 5px 0;"><h5>Size ${this.convWidth} x ${this.convHeight}</h5></div>
+                <div class="image-container" style="pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;">
+            </div>
+        </div>
+    `;
+    this.alphabetElement.innerHTML = sizeDiv;
+    const imageContainer = document.getElementsByClassName(
+      "image-container"
+    )[0];
+
+    for (const data of hexData) {
+      for (let x = 0; x < this.convWidth; x++) {
+        let byteIndex = x * Math.ceil(this.convHeight / 8);
+        let remainingBits = 8;
+
+        for (let y = 0; y < this.convHeight; y++) {
+          const bitIndex = y % 8;
+          const bit = (data[byteIndex] >> bitIndex) & 1;
+
+          const color = bit === 1 ? "black" : "white";
+          context.fillStyle = color;
+          context.fillRect(x, y, 1, 1);
+
+          remainingBits--;
+          if (remainingBits === 0) {
+            byteIndex++;
+            remainingBits = Math.min(8, this.convHeight - (y + 1));
+          }
+        }
+      }
+
+      const scaledCanvas = document.createElement("canvas");
+      scaledCanvas.width = this.convWidth * 25;
+      scaledCanvas.height = this.convHeight * 25;
+      const scaledContext = scaledCanvas.getContext("2d");
+      scaledContext.imageSmoothingEnabled = false;
+      scaledContext.drawImage(
+        canvas,
+        0,
+        0,
+        scaledCanvas.width,
+        scaledCanvas.height
+      );
+
+      const dataURL = scaledCanvas.toDataURL();
+      const image = new Image();
+      image.src = dataURL;
+      image.width = 25;
+      image.height = 25;
+      const imageDiv = document.createElement("div");
+      imageDiv.classList.add(`image-div`, `image-${this._canvas.counter}`);
+      imageDiv.style =
+        "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
+      imageContainer.appendChild(imageDiv);
+      imageDiv.appendChild(image);
+
+      imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
+
+      this.exportDataObj.data.push({ id: this._canvas.counter, data: data });
+      this._canvas.counter++;
+    }
+
+    const dimensionsContainer = document.getElementsByClassName(
+      "dimensions-container"
+    );
+    dimensionsContainer[0].addEventListener("click", () => {
+      this.alphabet.labelOnOff(dimensionsContainer[0], this._canvas.exportData);
+    });
+
+    this.exportDataObj.width = this.convWidth;
+    this.exportDataObj.height = this.convHeight;
+    document.getElementById("canvas-width").value = this.convWidth;
+    document.getElementById("canvas-height").value = this.convHeight;
+    this.canvas.setDimensions({
+      width: this.convWidth * this.gridSize,
+      height: this.convHeight * this.gridSize
+    });
+    this.grid.setDimensions({
+      width: this.convWidth * this.gridSize,
+      height: this.convHeight * this.gridSize
+    });
+    this._canvas.exportData.push(this.exportDataObj);
+    this._canvas.saveState();
+  }
+
+  parseFile() {
+    this.dataArray = [];
+    const dimensionsRegex = /\d+x\d+/;
+    const dimensionsMatch = this.file.match(dimensionsRegex);
+    const dimensions = dimensionsMatch ? dimensionsMatch[0] : null;
+    this.convWidth = parseInt(dimensions.split("x")[0], 10);
+    this.convHeight = parseInt(dimensions.split("x")[1], 10);
+
+    const glyphRegex = /glyph_\d+x\d+/gs;
+    this.file = this.file.replace(glyphRegex, "");
+    const charRegex = /const uint8_t.*?};/gs;
+    const matches = this.file.match(charRegex);
+
+    if (matches) {
+      for (const match of matches) {
+        const hexRegex = /0[xX][0-9A-Fa-f]{2}/g;
+        const hexValues = match.match(hexRegex);
+
+        if (hexValues) {
+          const values = hexValues.map(hex => parseInt(hex, 16));
+          this.dataArray.push(values);
+        }
+      }
+    }
   }
 
   export() {
     this.exportData = this._canvas.exportData;
     let width = document.getElementById("canvas-width");
     let height = document.getElementById("canvas-height");
+    // console.log(this.exportData);
 
     this.generateCppFile(this.exportData, width.value, height.value);
   }
@@ -157,7 +371,7 @@ export default class Header {
       height = data[i].height;
 
       for (let j = 0; j < data[i].data.length; j++) {
-        cppContent += `static const uint8_t glyph_${i}_${j}[] = {\n`;
+        cppContent += `static const uint8_t glyph_${i}_${j}[] FONT_LOCATION_FLASH_ATTRIBUTE = {\n`;
         for (let k = 0; k < data[i].data[j].data.length; k++) {
           cppContent += `    0x${data[i].data[j].data[k]
             .toString(16)

@@ -1,11 +1,18 @@
 import express from "express";
 import path from "path";
+import http from "http";
 import fs from "fs/promises";
+// import bodyParser from "body-parser";
 
 const app = express();
 
+// increase the payload size limit for JSON and URL-encoded bodies
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use(express.static("public"));
 app.use(express.json());
+
 app.use("/assets/webfonts", express.static("../assets/webfonts"));
 app.use(
   "/webfonts",
@@ -72,6 +79,15 @@ app.post("/delete-data", async (req, res) => {
 
 const port = 3000;
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+// app.listen(port, () => {
+//   console.log(`Server is running at http://localhost:${port}`);
+// });
+
+// ! Uncomment the following for production testing on dev's IP
+
+http.createServer(app).listen(port, "10.0.1.56", function() {
+  var host = "10.0.1.56";
+  // var port = server.address().port;
+
+  console.log("listening at http://%s:%s", host, port);
 });
