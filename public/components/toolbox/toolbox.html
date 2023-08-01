@@ -1,37 +1,32 @@
-<div class="toolbox rounded-[15px] row-start-1 row-end-6 col-start-2 col-end-8 grid grid-rows-6 bg-header-normal">
-  <div class="grid grid-rows-6 row-start-1 row-end-5">
-    <div class="tools text-black text-lg font-monolt row-start-2 row-end-7 grid grid-rows-6">
-      <span class="pencil default my-auto row-start-1 row-end-2 grid grid-cols-10 group hover:cursor-pointer">
-        <i class="fa fa-pencil flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-        <span class="col-start-4 col-end-11 group-hover:text-gray-400">Pencil</span>
-      </span>
-      <span class="eraser my-auto row-start-2 row-end-3 grid grid-cols-10 group hover:cursor-pointer">
-        <i class="fa fa-eraser flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-        <span class="col-start-4 col-end-11 group-hover:text-gray-400">Eraser</span>
-      </span>
-      <span class="fill my-auto row-start-3 row-end-4 grid grid-cols-10 group hover:cursor-pointer">
-        <i class="fa fa-fill flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-        <span class="col-start-4 col-end-11 group-hover:text-gray-400">Fill</span>
-      </span>
-      <span class="brush my-auto row-start-4 row-end-5 grid grid-cols-10 group hover:cursor-pointer">
-        <i class="fa fa-brush flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-        <span class="col-start-4 col-end-11 group-hover:text-gray-400">Brush</span>
-      </span>
-      <span class="select my-auto row-start-5 row-end-6 grid grid-cols-10 group hover:cursor-pointer">
-        <i class="fa fa-expand flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-        <span class="col-start-4 col-end-11 group-hover:text-gray-400">Select</span>
-      </span>
-    </div>
-  </div>
-  <div class="palette row-start-5 row-end-7 grid grid-rows-4 grid-cols-1 font-monolt text-lg">
-    <span class="color grid grid-cols-10 grid-rows-4 row-start-2 group hover:cursor-pointer">
-      <label class="row-start-1 row-end-2 col-start-1 col-end-11 group-hover:text-gray-400" for="color-input">
-        <span class="grid grid-cols-10 row-start-1 row-end-2 hover:cursor-pointer">
-          <i class="fa fa-palette flex self-center col-start-2 col-end-3 group-hover:text-gray-400"></i>
-          <span class="col-start-4 col-end-11">Color</span>
-        </span>
-      </label>
-      <input id="color-input" type="color" class="row-start-4 col-start-4 border-none bg-transparent w-[50px] h-[50px] hover:cursor-pointer">
+<div class="toolbox xl:w-[120px] w-[150px] h-[320px] rounded-xl flex justify-evenly flex-col items-center bg-header-normal">
+  <div class="tools text-black flex flex-col text-lg font-monolt">
+    <span class="pencil default m-3 group hover:cursor-pointer hover:text-gray-400">
+      <i class="fa-solid fa-pencil w-3 group-hover:text-gray-400"></i>
+      <span class="text-lg sm:hidden group-hover:text-gray-400"> Pencil</span>
     </span>
+    <span class="eraser m-3 group hover:cursor-pointer hover:text-gray-400">
+      <i class="fa-solid fa-eraser w-3 group-hover:text-gray-400"></i>
+      <span class="text-lg sm:hidden group-hover:text-gray-400"> Eraser</span>
+    </span>
+    <span class="fill m-3 group hover:cursor-pointer hover:text-gray-400">
+      <i class="fa-solid fa-fill w-3 group-hover:text-gray-400"></i>
+      <span class="text-lg sm:hidden group-hover:text-gray-400"> Fill</span>
+    </span>
+    <span class="brush m-3 group hover:cursor-pointer hover:text-gray-400">
+      <i class="fa-solid fa-brush w-3 group-hover:text-gray-400"></i>
+      <span class="text-lg sm:hidden group-hover:text-gray-400"> Brush</span>
+    </span>
+    <span class="select m-3 group hover:cursor-pointer hover:text-gray-400">
+      <i class="fa-solid fa-expand w-3 group-hover:text-gray-400"></i>
+      <span class="text-lg sm:hidden group-hover:text-gray-400"> Select</span>
+    </span>
+  </div>
+  <div class="palette hidden text-black font-monolt text-lg flex-col">
+    <label class="hover:text-gray-400 hover:cursor-pointer" for="color-input">
+      <i class="fa fa-palette"></i> Color
+    </label>
+    <div class="flex justify-center items-center">
+      <input id="color-input" type="color" class="border-none bg-transparent w-[50px] h-[50px] hover:text-gray-400 hover:cursor-pointer">
+    </div>
   </div>
 </div>

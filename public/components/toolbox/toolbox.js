@@ -2,12 +2,12 @@ export default class Toolbox {
   constructor() {
     this.header = null;
     this._canvas = null;
-
     this.selectedTool = null;
     this.colorInput = null;
     this.erasing = false;
     this.drawing = false;
-    this.col = { r: 0, g: 0, b: 0, a: 0xff };
+    this.colBlack = { r: 0, g: 0, b: 0, a: 0xff };
+    this.colWhite = { r: 255, g: 255, b: 255, a: 0xff };
     this.canvas = null;
     this.gridSize = null;
   }
@@ -33,6 +33,16 @@ export default class Toolbox {
     this.canvas.on("mouse:move", this.mouseMove);
     this.canvas.on("mouse:up", this.mouseUp);
     this.canvas.on("object:moving", this.objectMoving);
+    this.canvas.on("touch:start", this.mouseDown);
+    this.canvas.on("touch:move", this.mouseMove);
+    this.canvas.on("touch:end", this.mouseUp);
+
+    const canvasDiv = document.querySelector(".canvas-box");
+    document.addEventListener("click", event => {
+      if (!canvasDiv.contains(event.target)) {
+        this.deselectAllObjects();
+      }
+    });
   }
 
   toolSelect() {
@@ -72,6 +82,10 @@ export default class Toolbox {
     this.header.undoStack.push(JSON.stringify(this.canvas.toDatalessJSON()));
   }
 
+  deselectAllObjects() {
+    this.canvas.discardActiveObject().renderAll();
+  }
+
   mouseDown(event) {
     this.saveCanvasState();
     this.selectedTool = document.querySelector(".selected");
@@ -82,9 +96,66 @@ export default class Toolbox {
     let x = Math.round(pointer.x);
     let y = Math.round(pointer.y);
 
+    // check if it's a touch event
+    if (event.e.type === "touchstart") {
+      event.e.preventDefault();
+      let touch = event.e.touches[0];
+      pointer = this.canvas.getPointer(touch);
+      switch (true) {
+        case this.selectedTool.classList.contains("pencil"):
+          this._canvas.addRect(gridX, gridY, this.colorInput.value);
+          this.drawing = true;
+          break;
+        case this.selectedTool.classList.contains("brush"):
+          this._canvas.addRect(
+            gridX,
+            gridY,
+            this.colorInput.value,
+            this.gridSize * 2,
+            this.gridSize * 2
+          );
+          this.drawing = true;
+          break;
+        case this.selectedTool.classList.contains("eraser"):
+          this._canvas.addRect(gridX, gridY, "#fff");
+          this.drawing = true;
+          break;
+        case this.selectedTool.classList.contains("fill"):
+          this.hexToRgbA();
+          this.floodFill(this.colBlack, x, y);
+          break;
+        default:
+          break;
+      }
+    }
+
     if (event.e.button === 2) {
-      this._canvas.addRect(gridX, gridY, "#fff");
-      this.erasing = true;
+      switch (true) {
+        case this.selectedTool.classList.contains("pencil"):
+          this._canvas.addRect(gridX, gridY, "#fff");
+          this.erasing = true;
+          break;
+        case this.selectedTool.classList.contains("eraser"):
+          this._canvas.addRect(gridX, gridY, "#fff");
+          this.erasing = true;
+          break;
+        case this.selectedTool.classList.contains("brush"):
+          this._canvas.addRect(
+            gridX,
+            gridY,
+            "#fff",
+            this.gridSize * 2,
+            this.gridSize * 2
+          );
+          this.erasing = true;
+          break;
+        case this.selectedTool.classList.contains("fill"):
+          this.hexToRgbA();
+          this.floodFill(this.colWhite, x, y);
+          break;
+        default:
+          break;
+      }
     } else if (event.e.button === 0) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
@@ -107,7 +178,7 @@ export default class Toolbox {
           break;
         case this.selectedTool.classList.contains("fill"):
           this.hexToRgbA();
-          this.floodFill(this.col, x, y);
+          this.floodFill(this.colBlack, x, y);
           break;
         default:
           break;
@@ -121,7 +192,25 @@ export default class Toolbox {
     let gridY = Math.floor(pointer.y / this.gridSize) * this.gridSize;
 
     if (this.erasing) {
-      this._canvas.addRect(gridX, gridY, "#fff");
+      switch (true) {
+        case this.selectedTool.classList.contains("pencil"):
+          this._canvas.addRect(gridX, gridY, "#fff");
+          break;
+        case this.selectedTool.classList.contains("eraser"):
+          this._canvas.addRect(gridX, gridY, "#fff");
+          break;
+        case this.selectedTool.classList.contains("brush"):
+          this._canvas.addRect(
+            gridX,
+            gridY,
+            "#fff",
+            this.gridSize * 2,
+            this.gridSize * 2
+          );
+          break;
+        default:
+          break;
+      }
     } else if (this.drawing) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
@@ -175,9 +264,9 @@ export default class Toolbox {
       const g = (c >> 8) & 255;
       const b = c & 255;
 
-      this.col.r = r;
-      this.col.g = g;
-      this.col.b = b;
+      this.colBlack.r = r;
+      this.colBlack.g = g;
+      this.colBlack.b = b;
 
       return `rgba(${r}, ${g}, ${b}, 1)`;
     }
@@ -187,6 +276,26 @@ export default class Toolbox {
 
   colorMatch(a, b) {
     return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
+  }
+
+  getColorAtPxl(imageData, x, y) {
+    const { width, data } = imageData;
+
+    return {
+      r: data[4 * (width * y + x) + 0],
+      g: data[4 * (width * y + x) + 1],
+      b: data[4 * (width * y + x) + 2],
+      a: data[4 * (width * y + x) + 3]
+    };
+  }
+
+  setColorAtPxl(imageData, color, x, y) {
+    const { width, data } = imageData;
+
+    data[4 * (width * y + x) + 0] = color.r & 0xff;
+    data[4 * (width * y + x) + 1] = color.g & 0xff;
+    data[4 * (width * y + x) + 2] = color.b & 0xff;
+    data[4 * (width * y + x) + 3] = color.a & 0xff;
   }
 
   floodFill(newColor, x, y) {
@@ -202,7 +311,7 @@ export default class Toolbox {
 
     const { width, height } = imageData;
     const stack = [];
-    const baseColor = this._canvas.getColorAtPxl(imageData, x, y);
+    const baseColor = this.getColorAtPxl(imageData, x, y);
     let operator = { x, y };
 
     // check if base color and new color are the same
@@ -224,20 +333,20 @@ export default class Toolbox {
       while (contiguousUp && operator.y >= 0) {
         operator.y--;
         contiguousUp = this.colorMatch(
-          this._canvas.getColorAtPxl(imageData, operator.x, operator.y),
+          this.getColorAtPxl(imageData, operator.x, operator.y),
           baseColor
         );
       }
 
       // move downward
       while (contiguousDown && operator.y < height) {
-        this._canvas.setColorAtPxl(imageData, newColor, operator.x, operator.y);
+        this.setColorAtPxl(imageData, newColor, operator.x, operator.y);
 
         // check left
         if (
           operator.x - 1 >= 0 &&
           this.colorMatch(
-            this._canvas.getColorAtPxl(imageData, operator.x - 1, operator.y),
+            this.getColorAtPxl(imageData, operator.x - 1, operator.y),
             baseColor
           )
         ) {
@@ -253,7 +362,7 @@ export default class Toolbox {
         if (
           operator.x + 1 < width &&
           this.colorMatch(
-            this._canvas.getColorAtPxl(imageData, operator.x + 1, operator.y),
+            this.getColorAtPxl(imageData, operator.x + 1, operator.y),
             baseColor
           )
         ) {
@@ -267,7 +376,7 @@ export default class Toolbox {
 
         operator.y++;
         contiguousDown = this.colorMatch(
-          this._canvas.getColorAtPxl(imageData, operator.x, operator.y),
+          this.getColorAtPxl(imageData, operator.x, operator.y),
           baseColor
         );
       }

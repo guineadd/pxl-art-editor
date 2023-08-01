@@ -9,9 +9,11 @@ export default class Canvas {
     this.grid = null;
     this.gridSize = 20;
     this.saveBtn = null;
+    this.editbtn = null;
     this.removeBtn = null;
     this.counter = null;
     this.save = this.save.bind(this);
+    this.edit = this.edit.bind(this);
     this.remove = this.remove.bind(this);
     this.exportData = [];
     this.savedDimensions = [];
@@ -75,8 +77,10 @@ export default class Canvas {
     this.canvasContainer = document.querySelector("#canvas-container .canvas");
     this.alphabetElement = document.getElementById("alphabet");
     this.saveBtn = document.getElementById("save-btn");
+    this.editbtn = document.getElementById("edit-btn");
     this.removeBtn = document.getElementById("remove-btn");
     this.saveBtn.addEventListener("click", this.save);
+    this.editbtn.addEventListener("click", this.edit);
     this.removeBtn.addEventListener("click", this.remove);
     this.counter = 1;
 
@@ -107,26 +111,6 @@ export default class Canvas {
     });
 
     this.canvas.add(rect);
-  }
-
-  getColorAtPxl(imageData, x, y) {
-    const { width, data } = imageData;
-
-    return {
-      r: data[4 * (width * y + x) + 0],
-      g: data[4 * (width * y + x) + 1],
-      b: data[4 * (width * y + x) + 2],
-      a: data[4 * (width * y + x) + 3]
-    };
-  }
-
-  setColorAtPxl(imageData, color, x, y) {
-    const { width, data } = imageData;
-
-    data[4 * (width * y + x) + 0] = color.r & 0xff;
-    data[4 * (width * y + x) + 1] = color.g & 0xff;
-    data[4 * (width * y + x) + 2] = color.b & 0xff;
-    data[4 * (width * y + x) + 3] = color.a & 0xff;
   }
 
   newImage(canvas) {
@@ -324,6 +308,10 @@ export default class Canvas {
     this.saveState();
   }
 
+  edit() {
+    console.log(`Hi`);
+  }
+
   remove() {
     this.alphabet.selected.forEach(drawing => {
       // remove the selected drawings' DOM element
@@ -361,13 +349,21 @@ export default class Canvas {
     this.saveState();
   }
 
-  updateButtonState() {
+  updateButtonState(array = 0) {
     if (this.alphabetElement.childElementCount === 0) {
       this.removeBtn.style.opacity = "0.5";
       this.removeBtn.style.pointerEvents = "none";
     } else {
       this.removeBtn.style.opacity = "1";
       this.removeBtn.style.pointerEvents = "unset";
+    }
+
+    if (array.length > 0) {
+      this.editbtn.style.opacity = "1";
+      this.editbtn.style.pointerEvents = "unset";
+    } else {
+      this.editbtn.style.opacity = "0.5";
+      this.editbtn.style.pointerEvents = "none";
     }
   }
 

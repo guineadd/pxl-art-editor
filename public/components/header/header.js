@@ -71,7 +71,7 @@ export default class Header {
       this.newOrLoad();
     });
 
-    document.addEventListener("keypress", event => {
+    document.addEventListener("keydown", event => {
       if (event.ctrlKey) {
         if (event.key === "z") {
           this.undo();
@@ -181,19 +181,32 @@ export default class Header {
         this._canvas.exportData = [];
         this._canvas.counter = 1;
         if (this.newPressed) {
-          document.getElementById("canvas-width").value = 25;
-          document.getElementById("canvas-height").value = 25;
-          this.canvas.setDimensions({
-            width: 25 * this.gridSize,
-            height: 25 * this.gridSize
-          });
-          this.grid.setDimensions({
-            width: 25 * this.gridSize,
-            height: 25 * this.gridSize
-          });
+          if (window.innerWidth > 530) {
+            document.getElementById("canvas-width").value = 25;
+            document.getElementById("canvas-height").value = 25;
+            this.canvas.setDimensions({
+              width: 25 * this.gridSize,
+              height: 25 * this.gridSize
+            });
+            this.grid.setDimensions({
+              width: 25 * this.gridSize,
+              height: 25 * this.gridSize
+            });
+          } else if (window.innerWidth <= 530) {
+            document.getElementById("canvas-width").value = 18;
+            document.getElementById("canvas-height").value = 18;
+            this.canvas.setDimensions({
+              width: 18 * this.gridSize,
+              height: 18 * this.gridSize
+            });
+            this.grid.setDimensions({
+              width: 18 * this.gridSize,
+              height: 18 * this.gridSize
+            });
+          }
+
           this.newPressed = false;
         } else if (this.loadPressed) {
-          console.log(`Hi`);
           this.load();
           this.loadPressed = false;
         }

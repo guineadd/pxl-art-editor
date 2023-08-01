@@ -4,24 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A pixel art editor that exports the saved sketches as various file types">
-    <meta name="keywords" content="pixel, pxl, editor, pixel art, pixel-art, pxl art, pxl-art, export">
+    <meta name="keywords" content="pixel, pxl, art, editor, pixel-art, pxl-art, export, load">
     <title>Pxl Art Editor</title>
   </head>
-  <!-- <link rel="stylesheet" type="text/css" href="./styles/tailwind.css" /> -->
   <body>
-    <!-- <h1>Pxl Art Editor</h1> -->
-    <div class="container h-screen overflow-hidden">
-      <div id="header-container" class="header"></div>
-      <div class="bg-primary-normal main-content h-full grid grid-rows-6">
-        <div class="top-row row-span-4 grid grid-cols-8 grid-rows-6">
-          <div id="toolbox-container" class="grid grid-rows-6 grid-cols-8 row-start-2 row-end-7 col-span-1"></div>
-          <div id="canvas-container" class="grid grid-rows-6 grid-cols-8 col-start-2 col-end-6 row-start-1 row-end-7"></div>
-          <div id="alphabet-container" class="grid grid-rows-6 col-start-6 col-end-9 row-start-1 row-end-7">
-          </div>
+    <div class="container-all">
+      <div id="header-container" class="header mb-5"></div>
+      <div class="main-container flex items-center justify-evenly">
+        <div id="toolbox-container" class="relative top-[11px]"></div>
+        <div id="canvas-container" class="flex flex-col justify-between items-center h-[600px] w-[500px]"></div>
+        <div class="actions flex flex-col justify-between h-[180px]">
+          <button id="save-btn" class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4 ">
+            <i class="fa fa-circle-arrow-right lg:hidden"></i>
+            <i class="fa fa-circle-arrow-down hidden lg:flex"></i>
+          </button>
+          <button id="edit-btn" class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4 ">
+            <i class="fa fa-circle-arrow-left lg:hidden"></i>
+            <i class="fa fa-circle-arrow-up hidden lg:flex"></i>
+          </button>
+          <button id="remove-btn" class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4">
+            <i class="fa fa-ban"></i>
+          </button>
         </div>
-        <div class="definition-row row-span-1 grid grid-cols-8">
-          <div id="canvas-def-container" class="grid grid-rows-6 col-start-2 col-end-4"></div>
-        </div>
+        <div id="alphabet-container" class="flex flex-col text-secondary-normal relative top-[38px]"></div>
       </div>
     </div>
     <script type="text/javascript" src="dist/bundle.js"></script>
