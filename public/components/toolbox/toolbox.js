@@ -5,13 +5,11 @@ export default class Toolbox {
     this.header = null;
     this._canvas = null;
     this.selectedTool = null;
-    this.colorInput = null;
     this.erasing = false;
     this.drawing = false;
-    this.colBlack = { r: 0, g: 0, b: 0, a: 0xff };
-    this.colWhite = { r: 255, g: 255, b: 255, a: 0xff };
     this.canvas = null;
     this.gridSize = null;
+    this.existingRectPositions = [];
   }
 
   setComponents(header, canvas) {
@@ -22,7 +20,6 @@ export default class Toolbox {
   render() {
     this.canvas = this._canvas.canvas;
     this.gridSize = this._canvas.gridSize;
-    this.colorInput = document.getElementById("color-input");
 
     // bind the "this" context explicitly for the mouse events
     this.mouseDown = this.mouseDown.bind(this);
@@ -51,7 +48,7 @@ export default class Toolbox {
     // pencil is by default the selected tool -- use the selected class to work with different tools
     const defaultTool = document.querySelector(".default");
 
-    defaultTool.style.color = "white";
+    defaultTool.style.color = "#fff";
     defaultTool.classList.add("selected");
 
     const tools = document.querySelectorAll(".tools > span");
@@ -74,7 +71,7 @@ export default class Toolbox {
         }
 
         selected = tool;
-        tool.style.color = "white";
+        tool.style.color = "#fff";
         tool.classList.add("selected");
       });
     });
@@ -86,6 +83,28 @@ export default class Toolbox {
 
   deselectAllObjects() {
     this.canvas.discardActiveObject().renderAll();
+  }
+
+  // eslint-disable-next-line max-params
+  addRectangle(left, top, fill, width = this.gridSize, height = this.gridSize) {
+    const isPositionOccupied = this.existingRectPositions.some(position => {
+      return position.left === left && position.top === top;
+    });
+
+    if (!isPositionOccupied) {
+      let rect = new fabric.Rect({
+        left: left,
+        top: top,
+        width: width,
+        height: height,
+        fill: fill,
+        evented: false
+      });
+
+      this._canvas.canvas.add(rect);
+
+      this.existingRectPositions.push({ left, top });
+    }
   }
 
   mouseDown(event) {
@@ -105,26 +124,28 @@ export default class Toolbox {
       pointer = this.canvas.getPointer(touch);
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, this.colorInput.value);
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#000");
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.existingRectPositions = [];
+          this.addRectangle(
             gridX,
             gridY,
-            this.colorInput.value,
+            "#000",
             this.gridSize * 2,
             this.gridSize * 2
           );
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("fill"):
-          this.hexToRgbA();
-          this.floodFill(this.colBlack, x, y);
+          this.floodFill("#000", x, y);
           break;
         default:
           break;
@@ -134,15 +155,18 @@ export default class Toolbox {
     if (event.e.button === 2) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
           this.erasing = true;
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
           this.erasing = true;
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.existingRectPositions = [];
+          this.addRectangle(
             gridX,
             gridY,
             "#fff",
@@ -152,8 +176,7 @@ export default class Toolbox {
           this.erasing = true;
           break;
         case this.selectedTool.classList.contains("fill"):
-          this.hexToRgbA();
-          this.floodFill(this.colWhite, x, y);
+          this.floodFill("#fff", x, y);
           break;
         default:
           break;
@@ -161,26 +184,28 @@ export default class Toolbox {
     } else if (event.e.button === 0) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, this.colorInput.value);
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#000");
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.existingRectPositions = [];
+          this.addRectangle(
             gridX,
             gridY,
-            this.colorInput.value,
+            "#000",
             this.gridSize * 2,
             this.gridSize * 2
           );
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("fill"):
-          this.hexToRgbA();
-          this.floodFill(this.colBlack, x, y);
+          this.floodFill("#000", x, y);
           break;
         default:
           break;
@@ -196,13 +221,13 @@ export default class Toolbox {
     if (this.erasing) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.addRectangle(gridX, gridY, "#fff");
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.addRectangle(gridX, gridY, "#fff");
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.addRectangle(
             gridX,
             gridY,
             "#fff",
@@ -216,19 +241,19 @@ export default class Toolbox {
     } else if (this.drawing) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, this.colorInput.value);
+          this.addRectangle(gridX, gridY, "#000");
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.addRectangle(
             gridX,
             gridY,
-            this.colorInput.value,
+            "#000",
             this.gridSize * 2,
             this.gridSize * 2
           );
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.addRectangle(gridX, gridY, "#fff");
           break;
         default:
           break;
@@ -252,53 +277,8 @@ export default class Toolbox {
         Math.round(options.target.top / this.gridSize) * this.gridSize +
         options.target.height
     });
-    // const gridSize = 20;
-    // const canvasWidth = this._canvas.canvas.getWidth();
-    // const canvasHeight = this._canvas.canvas.getHeight();
-    // const obj = options.target;
-
-    // const left = Math.round(obj.left / gridSize) * gridSize;
-    // const top = Math.round(obj.top / gridSize) * gridSize;
-    // const right = left + obj.width;
-    // const bottom = top + obj.height;
-
-    // if (right > canvasWidth) {
-    //   obj.left = canvasWidth - obj.width;
-    // }
-
-    // if (bottom > canvasHeight) {
-    //   obj.top = canvasHeight - obj.height;
-    // }
 
     this._canvas.canvas.bringToFront(options.target);
-  }
-
-  // transform color from hex to rgba
-  hexToRgbA() {
-    let colorInput = this.colorInput;
-    let hex = colorInput.value;
-    let c;
-
-    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-      c = hex.substring(1).split("");
-
-      if (c.length === 3) {
-        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-      }
-
-      c = `0x${c.join("")}`;
-      const r = (c >> 16) & 255;
-      const g = (c >> 8) & 255;
-      const b = c & 255;
-
-      this.colBlack.r = r;
-      this.colBlack.g = g;
-      this.colBlack.b = b;
-
-      return `rgba(${r}, ${g}, ${b}, 1)`;
-    }
-
-    throw new Error(`Bad Hex`);
   }
 
   colorMatch(a, b) {
@@ -315,12 +295,6 @@ export default class Toolbox {
       b: pixel[2],
       a: pixel[3]
     };
-  }
-
-  setColorAtPxl(canvas, color, x, y) {
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, 1, 1);
   }
 
   floodFill(newColor, x, y) {
@@ -361,8 +335,6 @@ export default class Toolbox {
       stack.push({ x: operator.x - this.gridSize, y: operator.y });
       stack.push({ x: operator.x, y: operator.y + this.gridSize });
       stack.push({ x: operator.x, y: operator.y - this.gridSize });
-
-      console.log(`Hi`);
     }
 
     this._canvas.canvas.renderAll();
