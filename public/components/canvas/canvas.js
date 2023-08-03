@@ -22,11 +22,21 @@ export default class Canvas {
       height: null,
       data: []
     };
+    this.editData = {
+      id: null,
+      data: []
+    };
     this.selectedDrawings = [];
     this.state = {
-      elements: null,
-      hex: null,
-      counter: null
+      draw: {
+        elements: null,
+        hex: null,
+        counter: null
+      },
+      edit: null
+    };
+    this.editState = {
+      data: []
     };
   }
 
@@ -158,6 +168,13 @@ export default class Canvas {
 
     image.width = 25;
     image.height = 25;
+
+    // save the alphabet editable data to state
+    this.editData = {
+      id: this.counter,
+      data: JSON.stringify(this.canvas.toJSON())
+    };
+    this.editState.data.push(this.editData);
 
     // create div to contain the image
     const imageDiv = document.createElement("div");
@@ -303,13 +320,52 @@ export default class Canvas {
       this.exportData.push({ ...this.pxlData });
     }
 
-    this.updateButtonState();
+    this.updateButtonState(this.alphabet.selected);
     this.counter++;
     this.saveState();
   }
 
   edit() {
-    console.log(`Hi`);
+    const image = this.alphabetElement.querySelector(".selected");
+    const dimensions = image.parentElement.parentElement.classList[1]
+      .substring(5)
+      .split("x");
+    const width = parseInt(dimensions[0], 10);
+    const height = parseInt(dimensions[1], 10);
+
+    document.getElementById("canvas-width").value = width;
+    document.getElementById("canvas-height").value = height;
+
+    let selection = parseInt(image.classList[1].substring(6), 10);
+
+    this.editState.data.forEach(item => {
+      if (item.id === selection) {
+        this.canvas.clear();
+        this.canvas.loadFromJSON(item.data, () => {
+          this.canvas.forEachObject(obj => {
+            obj.evented = false;
+
+            const selected = this.canvas.getActiveObjects();
+            if (selected) {
+              selected.forEach(obj => {
+                this.canvas.bringToFront(obj);
+              });
+            }
+          });
+
+          this.canvas.setDimensions({
+            width: width * this.gridSize,
+            height: height * this.gridSize
+          });
+          this.grid.setDimensions({
+            width: width * this.gridSize,
+            height: height * this.gridSize
+          });
+
+          this.canvas.renderAll();
+        });
+      }
+    });
   }
 
   remove() {
@@ -345,23 +401,19 @@ export default class Canvas {
     });
 
     this.alphabet.selected.length = 0;
-    this.updateButtonState();
+    this.updateButtonState(this.alphabet.selected);
     this.saveState();
   }
 
-  updateButtonState(array = 0) {
-    if (this.alphabetElement.childElementCount === 0) {
-      this.removeBtn.style.opacity = "0.5";
-      this.removeBtn.style.pointerEvents = "none";
-    } else {
+  updateButtonState(array) {
+    if (array.length > 0) {
       this.removeBtn.style.opacity = "1";
       this.removeBtn.style.pointerEvents = "unset";
-    }
-
-    if (array.length > 0) {
       this.editbtn.style.opacity = "1";
       this.editbtn.style.pointerEvents = "unset";
     } else {
+      this.removeBtn.style.opacity = "0.5";
+      this.removeBtn.style.pointerEvents = "none";
       this.editbtn.style.opacity = "0.5";
       this.editbtn.style.pointerEvents = "none";
     }
@@ -372,14 +424,19 @@ export default class Canvas {
     const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
 
     this.state = {
-      elements: data,
-      hex: this.exportData,
-      counter: this.counter
+      draw: {
+        elements: data,
+        hex: this.exportData,
+        counter: this.counter
+      },
+      edit: this.editState
     };
     // save to local storage
     localStorage.setItem("drawings", JSON.stringify(data));
     localStorage.setItem("drawingsData", JSON.stringify(this.exportData));
     localStorage.setItem("drawingNum", JSON.stringify(this.counter));
+    // localStorage.setItem("editData", JSON.stringify(this.editState));
+    localStorage.setItem("editData", this.editState);
 
     // save to state internally
     fetch(`/save-data`, {
@@ -394,18 +451,26 @@ export default class Canvas {
   async loadState() {
     try {
       const response = await fetch(`/get-data`);
-      this.state = await response.json();
-      this.exportData = this.state.hex === null ? [] : this.state.hex;
-      this.counter = this.state.counter === null ? 1 : this.state.counter;
+      const data = await response.json();
+      this.state = {
+        draw: {
+          elements: data.elements,
+          hex: data.hex,
+          counter: data.counter
+        },
+        edit: data.data
+      };
+      this.exportData = this.state.draw.hex === null ? [] : this.state.draw.hex;
+      this.counter =
+        this.state.draw.counter === null ? 1 : this.state.draw.counter;
+      this.editState.data = this.state.edit;
 
-      if (this.state.elements && this.state.elements.length > 0) {
+      if (this.state.draw.elements && this.state.draw.elements.length > 0) {
         // clear existing content in the alphabet
         this.alphabetElement.innerHTML = "";
 
         // create array of div elements from state
-        let array = this.state.elements.map(drawing => {
-          // const div = document.createElement("div");
-          // div.innerHTML = drawing;
+        let array = this.state.draw.elements.map(drawing => {
           const parser = new DOMParser();
           const div = parser.parseFromString(drawing, "text/html");
 
@@ -432,7 +497,13 @@ export default class Canvas {
         });
       }
 
-      this.updateButtonState();
+      const selected = document.querySelector("#alphabet .selected");
+
+      if (selected) {
+        selected.classList.remove("selected");
+      }
+
+      this.updateButtonState(this.alphabet.selected);
     } catch (err) {
       console.error(`Error loading data: ${err}`);
     }

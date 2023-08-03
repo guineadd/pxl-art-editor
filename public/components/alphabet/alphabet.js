@@ -24,7 +24,9 @@ export default class Alphabet {
 
     this.selected = [];
 
-    if (!selected) {
+    if (selected) {
+      div.classList.remove("selected");
+    } else if (!selected) {
       div.classList.add("selected");
       this.selected.push(div);
     }

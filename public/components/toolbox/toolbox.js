@@ -1,3 +1,5 @@
+import { fabric } from "fabric";
+
 export default class Toolbox {
   constructor() {
     this.header = null;
@@ -242,8 +244,33 @@ export default class Toolbox {
   objectMoving(options) {
     options.target.set({
       left: Math.round(options.target.left / this.gridSize) * this.gridSize,
-      top: Math.round(options.target.top / this.gridSize) * this.gridSize
+      top: Math.round(options.target.top / this.gridSize) * this.gridSize,
+      right:
+        Math.round(options.target.left / this.gridSize) * this.gridSize +
+        options.target.width,
+      bottom:
+        Math.round(options.target.top / this.gridSize) * this.gridSize +
+        options.target.height
     });
+    // const gridSize = 20;
+    // const canvasWidth = this._canvas.canvas.getWidth();
+    // const canvasHeight = this._canvas.canvas.getHeight();
+    // const obj = options.target;
+
+    // const left = Math.round(obj.left / gridSize) * gridSize;
+    // const top = Math.round(obj.top / gridSize) * gridSize;
+    // const right = left + obj.width;
+    // const bottom = top + obj.height;
+
+    // if (right > canvasWidth) {
+    //   obj.left = canvasWidth - obj.width;
+    // }
+
+    // if (bottom > canvasHeight) {
+    //   obj.top = canvasHeight - obj.height;
+    // }
+
+    this._canvas.canvas.bringToFront(options.target);
   }
 
   // transform color from hex to rgba
@@ -278,127 +305,66 @@ export default class Toolbox {
     return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
   }
 
-  getColorAtPxl(imageData, x, y) {
-    const { width, data } = imageData;
+  getColorAtPxl(x, y) {
+    const ctx = this._canvas.canvas.getContext("2d");
+    const pixel = ctx.getImageData(x, y, 1, 1).data;
 
     return {
-      r: data[4 * (width * y + x) + 0],
-      g: data[4 * (width * y + x) + 1],
-      b: data[4 * (width * y + x) + 2],
-      a: data[4 * (width * y + x) + 3]
+      r: pixel[0],
+      g: pixel[1],
+      b: pixel[2],
+      a: pixel[3]
     };
   }
 
-  setColorAtPxl(imageData, color, x, y) {
-    const { width, data } = imageData;
-
-    data[4 * (width * y + x) + 0] = color.r & 0xff;
-    data[4 * (width * y + x) + 1] = color.g & 0xff;
-    data[4 * (width * y + x) + 2] = color.b & 0xff;
-    data[4 * (width * y + x) + 3] = color.a & 0xff;
+  setColorAtPxl(canvas, color, x, y) {
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, 1, 1);
   }
 
   floodFill(newColor, x, y) {
-    let ctx = this.canvas
-      .toCanvasElement()
-      .getContext("2d", { wilLReadFrequently: true });
-    let imageData = ctx.getImageData(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height
-    );
-
-    const { width, height } = imageData;
-    const stack = [];
-    const baseColor = this.getColorAtPxl(imageData, x, y);
-    let operator = { x, y };
-
-    // check if base color and new color are the same
+    const baseColor = this.getColorAtPxl(x, y);
     if (this.colorMatch(baseColor, newColor)) {
       return;
     }
 
-    // add the clicked location to stack
-    stack.push({ x: operator.x, y: operator.y });
+    const stack = [];
+    const processed = new Set();
+    stack.push({ x, y });
 
     while (stack.length) {
-      operator = stack.pop();
-      let contiguousDown = true;
-      let contiguousUp = true;
-      let contiguousLeft = false;
-      let contiguousRight = false;
-
-      // move to top most contiguousDown pixel
-      while (contiguousUp && operator.y >= 0) {
-        operator.y--;
-        contiguousUp = this.colorMatch(
-          this.getColorAtPxl(imageData, operator.x, operator.y),
-          baseColor
-        );
+      const operator = stack.pop();
+      const pxlColor = this.getColorAtPxl(operator.x, operator.y);
+      if (
+        !this.colorMatch(pxlColor, baseColor) ||
+        processed.has(`${operator.x}-${operator.y}`)
+      ) {
+        continue;
       }
 
-      // move downward
-      while (contiguousDown && operator.y < height) {
-        this.setColorAtPxl(imageData, newColor, operator.x, operator.y);
+      processed.add(`${operator.x}-${operator.y}`);
 
-        // check left
-        if (
-          operator.x - 1 >= 0 &&
-          this.colorMatch(
-            this.getColorAtPxl(imageData, operator.x - 1, operator.y),
-            baseColor
-          )
-        ) {
-          if (!contiguousLeft) {
-            contiguousLeft = true;
-            stack.push({ x: operator.x - 1, y: operator.y });
-          }
-        } else {
-          contiguousLeft = false;
-        }
+      const rect = new fabric.Rect({
+        left: Math.floor(operator.x / this.gridSize) * this.gridSize,
+        top: Math.floor(operator.y / this.gridSize) * this.gridSize,
+        width: this.gridSize,
+        height: this.gridSize,
+        fill: newColor,
+        selectable: true,
+        evented: false
+      });
 
-        // check right
-        if (
-          operator.x + 1 < width &&
-          this.colorMatch(
-            this.getColorAtPxl(imageData, operator.x + 1, operator.y),
-            baseColor
-          )
-        ) {
-          if (!contiguousRight) {
-            stack.push({ x: operator.x + 1, y: operator.y });
-            contiguousRight = true;
-          }
-        } else {
-          contiguousRight = false;
-        }
+      this._canvas.canvas.add(rect);
 
-        operator.y++;
-        contiguousDown = this.colorMatch(
-          this.getColorAtPxl(imageData, operator.x, operator.y),
-          baseColor
-        );
-      }
+      stack.push({ x: operator.x + this.gridSize, y: operator.y });
+      stack.push({ x: operator.x - this.gridSize, y: operator.y });
+      stack.push({ x: operator.x, y: operator.y + this.gridSize });
+      stack.push({ x: operator.x, y: operator.y - this.gridSize });
+
+      console.log(`Hi`);
     }
 
-    // create new canvas element and draw the modified imageData onto it
-    let tempCanvas = document.createElement("canvas");
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    let tempCtx = tempCanvas.getContext("2d", { wilLReadFrequently: true });
-    tempCtx.putImageData(imageData, 0, 0);
-
-    // create new fabric image with new canvas as source
-    let newImage = this._canvas.newImage(tempCanvas);
-
-    // remove existing fabric object from canvas
-    this.canvas.remove(this.canvas.item(0));
-
-    // add the new fabric image to the canvas
-    this.canvas.add(newImage);
-
-    // render canvas to reflect the changes
-    this.canvas.renderAll();
+    this._canvas.canvas.renderAll();
   }
 }

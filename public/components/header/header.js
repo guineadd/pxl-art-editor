@@ -1,4 +1,5 @@
 import { saveAs } from "file-saver";
+import { fabric } from "fabric";
 
 export default class Header {
   constructor() {
@@ -179,6 +180,13 @@ export default class Header {
         this.redoStack = [];
         localStorage.clear();
         this._canvas.exportData = [];
+        this._canvas.editState = {
+          data: []
+        };
+        this._canvas.editData = {
+          id: null,
+          data: []
+        };
         this._canvas.counter = 1;
         if (this.newPressed) {
           if (window.innerWidth > 530) {
@@ -254,6 +262,13 @@ export default class Header {
     canvas.height = this.convHeight;
     const context = canvas.getContext("2d");
 
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.id = "temp-canvas";
+    const fabricCanvas = new fabric.Canvas("temp-canvas", {
+      // backgroundColor: "white"
+      // preserveObjectStacking: true
+    });
+
     let sizeDiv = `
         <div class="size-div size_${this.convWidth}x${this.convHeight} enabled" style="order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;">
             <div class="dimensions-container" style="display: flex; margin: 5px 0;"><h5>Size ${this.convWidth} x ${this.convHeight}</h5></div>
@@ -266,7 +281,7 @@ export default class Header {
       "image-container"
     )[0];
 
-    for (const data of hexData) {
+    hexData.forEach((data, index) => {
       for (let x = 0; x < this.convWidth; x++) {
         let byteIndex = x * Math.ceil(this.convHeight / 8);
         let remainingBits = 8;
@@ -279,7 +294,18 @@ export default class Header {
           context.fillStyle = color;
           context.fillRect(x, y, 1, 1);
 
+          const pixel = new fabric.Rect({
+            left: x * this._canvas.gridSize,
+            top: y * this._canvas.gridSize,
+            width: this._canvas.gridSize,
+            height: this._canvas.gridSize,
+            fill: color,
+            evented: false
+          });
+
+          fabricCanvas.add(pixel).bringToFront(pixel);
           remainingBits--;
+
           if (remainingBits === 0) {
             byteIndex++;
             remainingBits = Math.min(8, this.convHeight - (y + 1));
@@ -305,6 +331,14 @@ export default class Header {
       image.src = dataURL;
       image.width = 25;
       image.height = 25;
+
+      const tempData = JSON.stringify(fabricCanvas.toJSON());
+      this._canvas.editData = {
+        id: index + 1,
+        data: tempData
+      };
+      this._canvas.editState.data.push(this._canvas.editData);
+
       const imageDiv = document.createElement("div");
       imageDiv.classList.add(`image-div`, `image-${this._canvas.counter}`);
       imageDiv.style =
@@ -316,7 +350,9 @@ export default class Header {
 
       this.exportDataObj.data.push({ id: this._canvas.counter, data: data });
       this._canvas.counter++;
-    }
+    });
+
+    console.log(this._canvas.editState);
 
     const dimensionsContainer = document.getElementsByClassName(
       "dimensions-container"
