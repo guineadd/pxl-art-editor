@@ -2,5 +2,5 @@ node_modules
 coverage
 .vscode
 dist
-src/db.json
+# src/db.json
 src/edit.json
