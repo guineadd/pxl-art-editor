@@ -1,4 +1,5 @@
 import { fabric } from "fabric";
+import pako from "pako";
 
 export default class Canvas {
   constructor() {
@@ -422,6 +423,7 @@ export default class Canvas {
   saveState() {
     const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
     const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
+    const compressedEditData = pako.gzip(JSON.stringify(this.editState));
 
     this.state = {
       draw: {
@@ -429,23 +431,44 @@ export default class Canvas {
         hex: this.exportData,
         counter: this.counter
       },
-      edit: this.editState
+      edit: JSON.stringify(compressedEditData)
     };
-    // save to local storage
-    localStorage.setItem("drawings", JSON.stringify(data));
-    localStorage.setItem("drawingsData", JSON.stringify(this.exportData));
-    localStorage.setItem("drawingNum", JSON.stringify(this.counter));
-    // localStorage.setItem("editData", JSON.stringify(this.editState));
-    localStorage.setItem("editData", this.editState);
-
     // save to state internally
-    fetch(`/save-data`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(this.state)
-    }).catch(err => console.error(`Error saving data: ${err}`));
+    const dataChunks = async data => {
+      const size = 1024 * 1024;
+      const total = Math.ceil(data.length / size);
+
+      for (let i = 0; i < total; i++) {
+        const start = i * size;
+        const end = start + size >= data.length ? data.length : start + size;
+        const chunk = data.slice(start, end);
+
+        // eslint-disable-next-line no-await-in-loop
+        await fetch(`/save-data?chunk=${i + 1}&totalChunks=${total}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: chunk
+        });
+      }
+    };
+
+    dataChunks(JSON.stringify(this.state))
+      .then(() => console.log(`Data saved successfully.`))
+      .catch(err => console.error(`Error saving data: ${err}`));
+
+    // fetch(`/save-data`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   },
+    //   body: JSON.stringify(this.state)
+    // })
+    //   .then(res => {
+    //     if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+    //   })
+    //   .catch(err => console.error(`Error saving data: ${err}`));
   }
 
   async loadState() {
@@ -458,12 +481,20 @@ export default class Canvas {
           hex: data.hex,
           counter: data.counter
         },
-        edit: data.data
+        edit: JSON.parse(data.data)
       };
       this.exportData = this.state.draw.hex === null ? [] : this.state.draw.hex;
       this.counter =
         this.state.draw.counter === null ? 1 : this.state.draw.counter;
-      this.editState.data = this.state.edit;
+      // const compressedEditData = new Uint8Array(this.state.edit);
+      const compressedEditDataObj = JSON.parse(this.state.edit);
+      const compressedEditDataArray = new Uint8Array(
+        Object.values(compressedEditDataObj)
+      );
+      const decompressedEditData = pako.ungzip(compressedEditDataArray, {
+        to: "string"
+      });
+      this.editState = JSON.parse(decompressedEditData);
 
       if (this.state.draw.elements && this.state.draw.elements.length > 0) {
         // clear existing content in the alphabet

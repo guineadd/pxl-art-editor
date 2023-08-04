@@ -352,8 +352,6 @@ export default class Header {
       this._canvas.counter++;
     });
 
-    console.log(this._canvas.editState);
-
     const dimensionsContainer = document.getElementsByClassName(
       "dimensions-container"
     );

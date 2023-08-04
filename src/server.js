@@ -1,14 +1,16 @@
+/* eslint-disable no-unused-vars */
 import express from "express";
 import path from "path";
-import http from "http";
-import fs from "fs/promises";
-// import bodyParser from "body-parser";
+import https from "https";
+import fsPromises from "fs/promises";
+import fs from "fs";
+import pako from "pako";
 
 const app = express();
 
 // increase the payload size limit for JSON and URL-encoded bodies
-app.use(express.json({ limit: "500mb" }));
-app.use(express.urlencoded({ extended: true, limit: "500mb" }));
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -37,12 +39,17 @@ app.get("/get-data", async (req, res) => {
   const dataFilePath = path.join(path.resolve(), "/src/db.json");
   const editDataFilePath = path.join(path.resolve(), "/src/edit.json");
   try {
-    const data = await fs.readFile(dataFilePath, "utf8");
+    const data = await fsPromises.readFile(dataFilePath, "utf8");
     const jsonData = JSON.parse(data);
-    const editData = await fs.readFile(editDataFilePath, "utf8");
-    const jsonEditData = JSON.parse(editData);
+    const editData = await fsPromises.readFile(editDataFilePath, "utf8");
+    const jsonEditData = editData;
 
-    const mergedData = Object.assign({}, jsonData, jsonEditData);
+    const mergedData = {
+      elements: jsonData.elements || [],
+      hex: jsonData.hex || [],
+      counter: jsonData.counter || 1,
+      data: jsonEditData
+    };
     res.json(mergedData);
   } catch (err) {
     console.error(`Error reading data from file: ${err}`);
@@ -51,26 +58,31 @@ app.get("/get-data", async (req, res) => {
 });
 
 app.post("/save-data", async (req, res) => {
-  const dataToWrite = req.body;
+  // const dataToWrite = req.body;
   const dataFilePath = path.join(path.resolve(), "/src/db.json");
   const editDataFilePath = path.join(path.resolve(), "/src/edit.json");
-  try {
-    await fs.writeFile(
-      dataFilePath,
-      JSON.stringify(dataToWrite.draw, null, 2),
-      "utf8"
-    );
 
-    await fs.writeFile(
-      editDataFilePath,
-      JSON.stringify(dataToWrite.edit, null, 2),
-      "utf8"
-    );
-  } catch (err) {
-    console.error(`Error writing data to file: ${err}`);
-  }
+  // try {
+  //   const
+  // }
 
-  res.send("Data saved successfully.");
+  // try {
+  //   await fsPromises.writeFile(
+  //     dataFilePath,
+  //     jSON.stringify(dataToWrite.draw, null, 2),
+  //     "utf8"
+  //   );
+
+  //   await fsPromises.writeFile(
+  //     editDataFilePath,
+  //     jSON.stringify(dataToWrite.edit, null, 2),
+  //     "utf8"
+  //   );
+  // } catch (err) {
+  //   console.error(`Error writing data to file: ${err}`);
+  // }
+
+  // res.send("Data saved successfully.");
 });
 
 app.post("/delete-data", async (req, res) => {
@@ -85,11 +97,16 @@ app.post("/delete-data", async (req, res) => {
     const newEditData = {
       data: []
     };
+    const compressedEditData = pako.gzip(JSON.stringify(newEditData, null, 2));
 
-    await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2), "utf8");
-    await fs.writeFile(
+    await fsPromises.writeFile(
+      dataFilePath,
+      JSON.stringify(newData, null, 2),
+      "utf8"
+    );
+    await fsPromises.writeFile(
       editDataFilePath,
-      JSON.stringify(newEditData, null, 2),
+      JSON.stringify(JSON.stringify(compressedEditData), null, 2),
       "utf8"
     );
     res.send("Data deleted successfully.");
@@ -101,15 +118,23 @@ app.post("/delete-data", async (req, res) => {
 
 const port = 3000;
 
+const key = fs.readFileSync("private_key.key", "utf8");
+const cert = fs.readFileSync("client_pxlart.crt", "utf8");
+const credentials = { key: key, cert: cert };
+
 // app.listen(port, () => {
 //   console.log(`Server is running at http://localhost:${port}`);
 // });
 
 // ! Uncomment the following for production testing on dev's IP
 
-http.createServer(app).listen(port, "10.0.1.56", function() {
+const server = https.createServer(credentials, app);
+
+server.listen(port, "10.0.1.56", function() {
   var host = "10.0.1.56";
   // var port = server.address().port;
 
-  console.log("listening at http://%s:%s", host, port);
+  console.log("listening at https://%s:%s", host, port);
 });
+
+server.timeout = 30000;
