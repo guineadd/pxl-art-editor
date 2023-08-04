@@ -39,6 +39,10 @@ export default class Canvas {
     this.editState = {
       data: []
     };
+    this.canvasWidth = null;
+    this.canvasHeight = null;
+    this.createdWidth = null;
+    this.createdHeight = null;
   }
 
   setComponents(alphabet) {
@@ -62,6 +66,8 @@ export default class Canvas {
       hoverCursor: "default"
     });
 
+    this.canvasWidth = document.getElementById("canvas-width");
+    this.canvasHeight = document.getElementById("canvas-height");
     let gridCellX = width / this.gridSize;
     let gridCellY = height / this.gridSize;
 
@@ -110,20 +116,6 @@ export default class Canvas {
     this.loadState();
   }
 
-  // eslint-disable-next-line max-params
-  addRect(left, top, fill, width = this.gridSize, height = this.gridSize) {
-    let rect = new fabric.Rect({
-      left: left,
-      top: top,
-      width: width,
-      height: height,
-      fill: fill,
-      evented: false
-    });
-
-    this.canvas.add(rect);
-  }
-
   newImage(canvas) {
     return new fabric.Image(canvas, {
       left: 0,
@@ -135,14 +127,8 @@ export default class Canvas {
 
   save() {
     // get the user-defined dimensions
-    const actualWidth = parseInt(
-      document.getElementById("canvas-width").value,
-      10
-    );
-    const actualHeight = parseInt(
-      document.getElementById("canvas-height").value,
-      10
-    );
+    const actualWidth = parseInt(this.createdWidth, 10);
+    const actualHeight = parseInt(this.createdHeight, 10);
 
     const dimensions = {
       width: actualWidth,
@@ -334,8 +320,10 @@ export default class Canvas {
     const width = parseInt(dimensions[0], 10);
     const height = parseInt(dimensions[1], 10);
 
-    document.getElementById("canvas-width").value = width;
-    document.getElementById("canvas-height").value = height;
+    this.createdWidth = width;
+    this.createdHeight = height;
+    this.canvasWidth.value = width;
+    this.canvasHeight.value = height;
 
     let selection = parseInt(image.classList[1].substring(6), 10);
 
