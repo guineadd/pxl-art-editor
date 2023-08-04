@@ -434,41 +434,41 @@ export default class Canvas {
       edit: JSON.stringify(compressedEditData)
     };
     // save to state internally
-    const dataChunks = async data => {
-      const size = 1024 * 1024;
-      const total = Math.ceil(data.length / size);
+    // const dataChunks = async data => {
+    //   const size = 1024 * 1024;
+    //   const total = Math.ceil(data.length / size);
 
-      for (let i = 0; i < total; i++) {
-        const start = i * size;
-        const end = start + size >= data.length ? data.length : start + size;
-        const chunk = data.slice(start, end);
+    //   for (let i = 0; i < total; i++) {
+    //     const start = i * size;
+    //     const end = start + size >= data.length ? data.length : start + size;
+    //     const chunk = data.slice(start, end);
 
-        // eslint-disable-next-line no-await-in-loop
-        await fetch(`/save-data?chunk=${i + 1}&totalChunks=${total}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: chunk
-        });
-      }
-    };
+    //     // eslint-disable-next-line no-await-in-loop
+    //     await fetch(`/save-data?chunk=${i + 1}&totalChunks=${total}`, {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json"
+    //       },
+    //       body: chunk
+    //     });
+    //   }
+    // };
 
-    dataChunks(JSON.stringify(this.state))
-      .then(() => console.log(`Data saved successfully.`))
-      .catch(err => console.error(`Error saving data: ${err}`));
-
-    // fetch(`/save-data`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   },
-    //   body: JSON.stringify(this.state)
-    // })
-    //   .then(res => {
-    //     if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
-    //   })
+    // dataChunks(JSON.stringify(this.state))
+    //   .then(() => console.log(`Data saved successfully.`))
     //   .catch(err => console.error(`Error saving data: ${err}`));
+
+    fetch(`/save-data`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(this.state)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+      })
+      .catch(err => console.error(`Error saving data: ${err}`));
   }
 
   async loadState() {

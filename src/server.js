@@ -1,10 +1,10 @@
-/* eslint-disable no-unused-vars */
 import express from "express";
 import path from "path";
 import https from "https";
 import fsPromises from "fs/promises";
 import fs from "fs";
 import pako from "pako";
+// import { Readable } from "stream";
 
 const app = express();
 
@@ -58,31 +58,31 @@ app.get("/get-data", async (req, res) => {
 });
 
 app.post("/save-data", async (req, res) => {
-  // const dataToWrite = req.body;
+  const dataToWrite = req.body;
   const dataFilePath = path.join(path.resolve(), "/src/db.json");
   const editDataFilePath = path.join(path.resolve(), "/src/edit.json");
 
   // try {
-  //   const
+  //   const chunk = parseInt(req.query.edit.chunk);
   // }
 
-  // try {
-  //   await fsPromises.writeFile(
-  //     dataFilePath,
-  //     jSON.stringify(dataToWrite.draw, null, 2),
-  //     "utf8"
-  //   );
+  try {
+    await fsPromises.writeFile(
+      dataFilePath,
+      JSON.stringify(dataToWrite.draw, null, 2),
+      "utf8"
+    );
 
-  //   await fsPromises.writeFile(
-  //     editDataFilePath,
-  //     jSON.stringify(dataToWrite.edit, null, 2),
-  //     "utf8"
-  //   );
-  // } catch (err) {
-  //   console.error(`Error writing data to file: ${err}`);
-  // }
+    await fsPromises.writeFile(
+      editDataFilePath,
+      JSON.stringify(dataToWrite.edit, null, 2),
+      "utf8"
+    );
+  } catch (err) {
+    console.error(`Error writing data to file: ${err}`);
+  }
 
-  // res.send("Data saved successfully.");
+  res.send("Data saved successfully.");
 });
 
 app.post("/delete-data", async (req, res) => {
