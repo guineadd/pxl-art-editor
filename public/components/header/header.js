@@ -190,8 +190,8 @@ export default class Header {
         this._canvas.counter = 1;
         if (this.newPressed) {
           if (window.innerWidth > 530) {
-            document.getElementById("canvas-width").value = 25;
-            document.getElementById("canvas-height").value = 25;
+            this._canvas.canvasWidth.value = 25;
+            this._canvas.canvasHeight.value = 25;
             this.canvas.setDimensions({
               width: 25 * this.gridSize,
               height: 25 * this.gridSize
@@ -201,8 +201,8 @@ export default class Header {
               height: 25 * this.gridSize
             });
           } else if (window.innerWidth <= 530) {
-            document.getElementById("canvas-width").value = 18;
-            document.getElementById("canvas-height").value = 18;
+            this._canvas.canvasWidth.value = 18;
+            this._canvas.canvasHeight.value = 18;
             this.canvas.setDimensions({
               width: 18 * this.gridSize,
               height: 18 * this.gridSize
@@ -361,8 +361,8 @@ export default class Header {
 
     this.exportDataObj.width = this.convWidth;
     this.exportDataObj.height = this.convHeight;
-    document.getElementById("canvas-width").value = this.convWidth;
-    document.getElementById("canvas-height").value = this.convHeight;
+    this._canvas.canvasWidth.value = this.convWidth;
+    this._canvas.canvasHeight.value = this.convHeight;
     this.canvas.setDimensions({
       width: this.convWidth * this.gridSize,
       height: this.convHeight * this.gridSize
@@ -403,19 +403,15 @@ export default class Header {
 
   export() {
     this.exportData = this._canvas.exportData;
-    let width = document.getElementById("canvas-width");
-    let height = document.getElementById("canvas-height");
-    // console.log(this.exportData);
-
-    this.generateCppFile(this.exportData, width.value, height.value);
+    this.generateCppFile(this.exportData);
   }
 
-  generateCppFile(data, width, height) {
+  generateCppFile(data) {
     let cppContent = "";
 
     for (let i = 0; i < data.length; i++) {
-      width = data[i].width;
-      height = data[i].height;
+      let width = data[i].width;
+      let height = data[i].height;
 
       for (let j = 0; j < data[i].data.length; j++) {
         cppContent += `static const uint8_t glyph_${i}_${j}[] FONT_LOCATION_FLASH_ATTRIBUTE = {\n`;

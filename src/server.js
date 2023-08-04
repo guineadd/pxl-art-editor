@@ -127,9 +127,9 @@ const credentials = { key: key, cert: cert };
 
 // !Uncomment the following for development testing
 
-// app.listen(port, () => {
-//   console.log(`Server is running at http://localhost:${port}`);
-// });
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
 
 // ! Uncomment the following for production testing on host's IP
 
