@@ -3,10 +3,12 @@ import path from "path";
 import https from "https";
 import fsPromises from "fs/promises";
 import fs from "fs";
+import dotenv from "dotenv";
 import pako from "pako";
 // import { Readable } from "stream";
 
 const app = express();
+dotenv.config();
 
 // increase the payload size limit for JSON and URL-encoded bodies
 app.use(express.json({ limit: "100mb" }));
@@ -116,25 +118,23 @@ app.post("/delete-data", async (req, res) => {
   }
 });
 
-const port = 3000;
+const port = process.env.port;
+const host = process.env.host;
 
 const key = fs.readFileSync("private_key.key", "utf8");
 const cert = fs.readFileSync("client_pxlart.crt", "utf8");
 const credentials = { key: key, cert: cert };
 
+// !Uncomment the following for development testing
+
 // app.listen(port, () => {
 //   console.log(`Server is running at http://localhost:${port}`);
 // });
 
-// ! Uncomment the following for production testing on dev's IP
+// ! Uncomment the following for production testing on host's IP
 
 const server = https.createServer(credentials, app);
 
-server.listen(port, "10.0.1.56", function() {
-  var host = "10.0.1.56";
-  // var port = server.address().port;
-
+server.listen(port, host, () => {
   console.log("listening at https://%s:%s", host, port);
 });
-
-server.timeout = 30000;
