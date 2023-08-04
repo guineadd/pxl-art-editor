@@ -1,33 +1,36 @@
-<header class="bg-header-normal text-white text-xl font-monomd p-5 grid grid-cols-2">
-  <div class="col-start-1 grid grid-cols-6">
-    <span id="undo-btn" class="col-start-1 grid grid-cols-4 undo-action group hover:cursor-pointer">
-      <i class="flex self-center fa fa-rotate-left col-start-1 col-end-2 group-hover:text-gray-400"></i>
-      <span class="group-hover:text-gray-400">UNDO</span>
+<header class="bg-header-normal text-white text-lg font-monomd flex h-16 justify-between items-center">
+  <div class="sm:w-[100px] w-[200px] flex justify-around">
+    <span class="undo-button cursor-pointer hover:text-gray-400" id="undo-btn">
+      <i class="fa fa-rotate-left"></i>
+      <span class="sm:hidden">UNDO</span>
     </span>
-    <span id="redo-btn" class="col-start-2 grid grid-cols-4 redo-action group hover:cursor-pointer">
-      <i class="flex self-center fa fa-rotate-right col-start-1 col-end-2 group-hover:text-gray-400"></i>
-      <span class="group-hover:text-gray-400">REDO</span>
+    <span class="redo-button cursor-pointer hover:text-gray-400" id="redo-btn">
+      <i class="fa fa-rotate-right"></i>
+      <span class="sm:hidden">REDO</span>
     </span>
   </div>
-  <div class="col-start-2 grid grid-cols-6">
-    <span id="new-btn" class="col-start-4 grid grid-cols-4 custom-action group hover:cursor-pointer">
-      <i class="flex self-center fa-solid fa-file-circle-plus col-start-1 col-end-2 group-hover:text-gray-400"></i>
-      <span class="group-hover:text-gray-400">NEW</span>
+  <div class="w-[350px] flex justify-around">
+    <span class="cursor-pointer hover:text-gray-400" id="new-btn">
+      <i class="fa-solid fa-file-circle-plus"></i>
+      <span>NEW</span>
     </span>
-    <span class="col-start-5 grid grid-cols-4 load-action group hover:cursor-pointer">
-      <i class="flex self-center fa fa-folder-open col-start-1 col-end-2 group-hover:text-gray-400"></i>
-      <span class="group-hover:text-gray-400">LOAD</span>
+    <span class="group hover:cursor-pointer relative" id="load-btn">
+      <i class="fa fa-folder-open group-hover:text-gray-400"></i>
+      <span class="group-hover:text-gray-400">
+        LOAD
+        <input id="load-file" type="file" class="appearance-none opacity-0 absolute inset-0 pointer-events-none">
+      </span>
     </span>
-    <span id="export-btn" class="col-start-6 grid grid-cols-4 export-action group hover:cursor-pointer">
-      <i class="flex self-center fa fa-file-export col-start-1 col-end-2 group-hover:text-gray-400"></i>
-      <span class="group-hover:text-gray-400">EXPORT</span>
+    <span class="cursor-pointer hover:text-gray-400" id="export-btn">
+      <i class="fa-solid fa-file-export"></i>
+      <span>EXPORT</span>
     </span>
   </div>
   <!-- confirmation modal for new project -->
   <div id="modal-container" class="fixed inset-0 z-50 hidden outline-none">
     <div class="bg fixed top-0 left-0 z-40 w-screen h-screen flex justify-center items-center backdrop-opacity-10 bg-black/30">
-      <div id="modal" class="bg-white p-8 rounded-md h-[200px] w-[600px] transition-opacity duration-300">
-        <p class="text-lg font-semibold mb-4 text-black">Are you sure you want to start a new project? All progress will be lost.</p>
+      <div id="modal" class="bg-white p-8 flex flex-col justify-between rounded-md h-auto w-[600px] transition-opacity duration-300">
+        <p class="text-lg font-semibold mb-4 text-black"></p>
         <div class="flex justify-end">
           <button id="confirm-modal-btn" class="px-4 py-2 mr-2 bg-secondary-normal text-white rounded hover:bg-secondary-hover">OK</button>
           <button id="cancel-modal-btn" class="px-4 py-2 bg-header-normal text-white rounded hover:bg-header-hover">Cancel</button>

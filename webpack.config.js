@@ -1,13 +1,11 @@
-const path = require("path");
-// const webpack = require("webpack");
-// const HtmlWebpackPlugin = require("html-webpack-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+import path from "path";
+import { CleanWebpackPlugin } from "clean-webpack-plugin";
 
-module.exports = {
+export default {
   entry: "./public/js/index.js",
   output: {
     filename: "bundle.js",
-    path: path.resolve(__dirname, "public/dist")
+    path: path.join(path.resolve(), "public/dist")
   },
   module: {
     rules: [
@@ -25,7 +23,7 @@ module.exports = {
     extensions: [".js", ".css", ".html"]
   },
   devServer: {
-    static: path.join(__dirname, "public"),
+    static: path.join(path.resolve(), "public"),
     hot: true,
     open: true
   },

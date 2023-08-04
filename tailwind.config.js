@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: ["./public/**/*.{html, js}", "./public/index.html"],
   theme: {
     extend: {
@@ -25,6 +25,22 @@ module.exports = {
         monolt: ['"JetBrains Mono Light"', "monospace"],
         monomd: ['"JetBrains Mono Medium"', "monospace"]
       }
+    },
+    screens: {
+      xl: { max: "1280px" },
+      // => @media (max-width: 1279px) { ... }
+
+      lg: { max: "1024px" },
+      // => @media (max-width: 1023px) { ... }
+
+      md: { max: "768px" },
+      // => @media (max-width: 767px) { ... }
+
+      sm: { max: "640px" },
+      // => @media (max-width: 639px) { ... }
+
+      xs: { max: "530px" }
+      // => @media (max-width: 529px) { ... }
     }
   },
   plugins: []

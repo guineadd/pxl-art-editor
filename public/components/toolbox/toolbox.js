@@ -1,15 +1,15 @@
+import { fabric } from "fabric";
+
 export default class Toolbox {
   constructor() {
     this.header = null;
     this._canvas = null;
-
     this.selectedTool = null;
-    this.colorInput = null;
     this.erasing = false;
     this.drawing = false;
-    this.col = { r: 0, g: 0, b: 0, a: 0xff };
     this.canvas = null;
     this.gridSize = null;
+    this.existingRectPositions = [];
   }
 
   setComponents(header, canvas) {
@@ -20,7 +20,6 @@ export default class Toolbox {
   render() {
     this.canvas = this._canvas.canvas;
     this.gridSize = this._canvas.gridSize;
-    this.colorInput = document.getElementById("color-input");
 
     // bind the "this" context explicitly for the mouse events
     this.mouseDown = this.mouseDown.bind(this);
@@ -33,13 +32,23 @@ export default class Toolbox {
     this.canvas.on("mouse:move", this.mouseMove);
     this.canvas.on("mouse:up", this.mouseUp);
     this.canvas.on("object:moving", this.objectMoving);
+    this.canvas.on("touch:start", this.mouseDown);
+    this.canvas.on("touch:move", this.mouseMove);
+    this.canvas.on("touch:end", this.mouseUp);
+
+    const canvasDiv = document.querySelector(".canvas-box");
+    document.addEventListener("click", event => {
+      if (!canvasDiv.contains(event.target)) {
+        this.deselectAllObjects();
+      }
+    });
   }
 
   toolSelect() {
     // pencil is by default the selected tool -- use the selected class to work with different tools
     const defaultTool = document.querySelector(".default");
 
-    defaultTool.style.color = "white";
+    defaultTool.style.color = "#fff";
     defaultTool.classList.add("selected");
 
     const tools = document.querySelectorAll(".tools > span");
@@ -62,7 +71,7 @@ export default class Toolbox {
         }
 
         selected = tool;
-        tool.style.color = "white";
+        tool.style.color = "#fff";
         tool.classList.add("selected");
       });
     });
@@ -70,6 +79,32 @@ export default class Toolbox {
 
   saveCanvasState() {
     this.header.undoStack.push(JSON.stringify(this.canvas.toDatalessJSON()));
+  }
+
+  deselectAllObjects() {
+    this.canvas.discardActiveObject().renderAll();
+  }
+
+  // eslint-disable-next-line max-params
+  addRectangle(left, top, fill, width = this.gridSize, height = this.gridSize) {
+    const isPositionOccupied = this.existingRectPositions.some(position => {
+      return position.left === left && position.top === top;
+    });
+
+    if (!isPositionOccupied) {
+      let rect = new fabric.Rect({
+        left: left,
+        top: top,
+        width: width,
+        height: height,
+        fill: fill,
+        evented: false
+      });
+
+      this._canvas.canvas.add(rect);
+
+      this.existingRectPositions.push({ left, top });
+    }
   }
 
   mouseDown(event) {
@@ -82,32 +117,95 @@ export default class Toolbox {
     let x = Math.round(pointer.x);
     let y = Math.round(pointer.y);
 
-    if (event.e.button === 2) {
-      this._canvas.addRect(gridX, gridY, "#fff");
-      this.erasing = true;
-    } else if (event.e.button === 0) {
+    // check if it's a touch event
+    if (event.e.type === "touchstart") {
+      event.e.preventDefault();
+      let touch = event.e.touches[0];
+      pointer = this.canvas.getPointer(touch);
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, this.colorInput.value);
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#000");
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.existingRectPositions = [];
+          this.addRectangle(
             gridX,
             gridY,
-            this.colorInput.value,
+            "#000",
             this.gridSize * 2,
             this.gridSize * 2
           );
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
           this.drawing = true;
           break;
         case this.selectedTool.classList.contains("fill"):
-          this.hexToRgbA();
-          this.floodFill(this.col, x, y);
+          this.floodFill("#000", x, y);
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (event.e.button === 2) {
+      switch (true) {
+        case this.selectedTool.classList.contains("pencil"):
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
+          this.erasing = true;
+          break;
+        case this.selectedTool.classList.contains("eraser"):
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
+          this.erasing = true;
+          break;
+        case this.selectedTool.classList.contains("brush"):
+          this.existingRectPositions = [];
+          this.addRectangle(
+            gridX,
+            gridY,
+            "#fff",
+            this.gridSize * 2,
+            this.gridSize * 2
+          );
+          this.erasing = true;
+          break;
+        case this.selectedTool.classList.contains("fill"):
+          this.floodFill("#fff", x, y);
+          break;
+        default:
+          break;
+      }
+    } else if (event.e.button === 0) {
+      switch (true) {
+        case this.selectedTool.classList.contains("pencil"):
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#000");
+          this.drawing = true;
+          break;
+        case this.selectedTool.classList.contains("brush"):
+          this.existingRectPositions = [];
+          this.addRectangle(
+            gridX,
+            gridY,
+            "#000",
+            this.gridSize * 2,
+            this.gridSize * 2
+          );
+          this.drawing = true;
+          break;
+        case this.selectedTool.classList.contains("eraser"):
+          this.existingRectPositions = [];
+          this.addRectangle(gridX, gridY, "#fff");
+          this.drawing = true;
+          break;
+        case this.selectedTool.classList.contains("fill"):
+          this.floodFill("#000", x, y);
           break;
         default:
           break;
@@ -121,23 +219,41 @@ export default class Toolbox {
     let gridY = Math.floor(pointer.y / this.gridSize) * this.gridSize;
 
     if (this.erasing) {
-      this._canvas.addRect(gridX, gridY, "#fff");
+      switch (true) {
+        case this.selectedTool.classList.contains("pencil"):
+          this.addRectangle(gridX, gridY, "#fff");
+          break;
+        case this.selectedTool.classList.contains("eraser"):
+          this.addRectangle(gridX, gridY, "#fff");
+          break;
+        case this.selectedTool.classList.contains("brush"):
+          this.addRectangle(
+            gridX,
+            gridY,
+            "#fff",
+            this.gridSize * 2,
+            this.gridSize * 2
+          );
+          break;
+        default:
+          break;
+      }
     } else if (this.drawing) {
       switch (true) {
         case this.selectedTool.classList.contains("pencil"):
-          this._canvas.addRect(gridX, gridY, this.colorInput.value);
+          this.addRectangle(gridX, gridY, "#000");
           break;
         case this.selectedTool.classList.contains("brush"):
-          this._canvas.addRect(
+          this.addRectangle(
             gridX,
             gridY,
-            this.colorInput.value,
+            "#000",
             this.gridSize * 2,
             this.gridSize * 2
           );
           break;
         case this.selectedTool.classList.contains("eraser"):
-          this._canvas.addRect(gridX, gridY, "#fff");
+          this.addRectangle(gridX, gridY, "#fff");
           break;
         default:
           break;
@@ -153,143 +269,74 @@ export default class Toolbox {
   objectMoving(options) {
     options.target.set({
       left: Math.round(options.target.left / this.gridSize) * this.gridSize,
-      top: Math.round(options.target.top / this.gridSize) * this.gridSize
+      top: Math.round(options.target.top / this.gridSize) * this.gridSize,
+      right:
+        Math.round(options.target.left / this.gridSize) * this.gridSize +
+        options.target.width,
+      bottom:
+        Math.round(options.target.top / this.gridSize) * this.gridSize +
+        options.target.height
     });
-  }
 
-  // transform color from hex to rgba
-  hexToRgbA() {
-    let colorInput = this.colorInput;
-    let hex = colorInput.value;
-    let c;
-
-    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-      c = hex.substring(1).split("");
-
-      if (c.length === 3) {
-        c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-      }
-
-      c = `0x${c.join("")}`;
-      const r = (c >> 16) & 255;
-      const g = (c >> 8) & 255;
-      const b = c & 255;
-
-      this.col.r = r;
-      this.col.g = g;
-      this.col.b = b;
-
-      return `rgba(${r}, ${g}, ${b}, 1)`;
-    }
-
-    throw new Error(`Bad Hex`);
+    this._canvas.canvas.bringToFront(options.target);
   }
 
   colorMatch(a, b) {
     return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
   }
 
+  getColorAtPxl(x, y) {
+    const ctx = this._canvas.canvas.getContext("2d");
+    const pixel = ctx.getImageData(x, y, 1, 1).data;
+
+    return {
+      r: pixel[0],
+      g: pixel[1],
+      b: pixel[2],
+      a: pixel[3]
+    };
+  }
+
   floodFill(newColor, x, y) {
-    let ctx = this.canvas
-      .toCanvasElement()
-      .getContext("2d", { wilLReadFrequently: true });
-    let imageData = ctx.getImageData(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height
-    );
-
-    const { width, height } = imageData;
-    const stack = [];
-    const baseColor = this._canvas.getColorAtPxl(imageData, x, y);
-    let operator = { x, y };
-
-    // check if base color and new color are the same
+    const baseColor = this.getColorAtPxl(x, y);
     if (this.colorMatch(baseColor, newColor)) {
       return;
     }
 
-    // add the clicked location to stack
-    stack.push({ x: operator.x, y: operator.y });
+    const stack = [];
+    const processed = new Set();
+    stack.push({ x, y });
 
     while (stack.length) {
-      operator = stack.pop();
-      let contiguousDown = true;
-      let contiguousUp = true;
-      let contiguousLeft = false;
-      let contiguousRight = false;
-
-      // move to top most contiguousDown pixel
-      while (contiguousUp && operator.y >= 0) {
-        operator.y--;
-        contiguousUp = this.colorMatch(
-          this._canvas.getColorAtPxl(imageData, operator.x, operator.y),
-          baseColor
-        );
+      const operator = stack.pop();
+      const pxlColor = this.getColorAtPxl(operator.x, operator.y);
+      if (
+        !this.colorMatch(pxlColor, baseColor) ||
+        processed.has(`${operator.x}-${operator.y}`)
+      ) {
+        continue;
       }
 
-      // move downward
-      while (contiguousDown && operator.y < height) {
-        this._canvas.setColorAtPxl(imageData, newColor, operator.x, operator.y);
+      processed.add(`${operator.x}-${operator.y}`);
 
-        // check left
-        if (
-          operator.x - 1 >= 0 &&
-          this.colorMatch(
-            this._canvas.getColorAtPxl(imageData, operator.x - 1, operator.y),
-            baseColor
-          )
-        ) {
-          if (!contiguousLeft) {
-            contiguousLeft = true;
-            stack.push({ x: operator.x - 1, y: operator.y });
-          }
-        } else {
-          contiguousLeft = false;
-        }
+      const rect = new fabric.Rect({
+        left: Math.floor(operator.x / this.gridSize) * this.gridSize,
+        top: Math.floor(operator.y / this.gridSize) * this.gridSize,
+        width: this.gridSize,
+        height: this.gridSize,
+        fill: newColor,
+        selectable: true,
+        evented: false
+      });
 
-        // check right
-        if (
-          operator.x + 1 < width &&
-          this.colorMatch(
-            this._canvas.getColorAtPxl(imageData, operator.x + 1, operator.y),
-            baseColor
-          )
-        ) {
-          if (!contiguousRight) {
-            stack.push({ x: operator.x + 1, y: operator.y });
-            contiguousRight = true;
-          }
-        } else {
-          contiguousRight = false;
-        }
+      this._canvas.canvas.add(rect);
 
-        operator.y++;
-        contiguousDown = this.colorMatch(
-          this._canvas.getColorAtPxl(imageData, operator.x, operator.y),
-          baseColor
-        );
-      }
+      stack.push({ x: operator.x + this.gridSize, y: operator.y });
+      stack.push({ x: operator.x - this.gridSize, y: operator.y });
+      stack.push({ x: operator.x, y: operator.y + this.gridSize });
+      stack.push({ x: operator.x, y: operator.y - this.gridSize });
     }
 
-    // create new canvas element and draw the modified imageData onto it
-    let tempCanvas = document.createElement("canvas");
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    let tempCtx = tempCanvas.getContext("2d", { wilLReadFrequently: true });
-    tempCtx.putImageData(imageData, 0, 0);
-
-    // create new fabric image with new canvas as source
-    let newImage = this._canvas.newImage(tempCanvas);
-
-    // remove existing fabric object from canvas
-    this.canvas.remove(this.canvas.item(0));
-
-    // add the new fabric image to the canvas
-    this.canvas.add(newImage);
-
-    // render canvas to reflect the changes
-    this.canvas.renderAll();
+    this._canvas.canvas.renderAll();
   }
 }

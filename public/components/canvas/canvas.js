@@ -1,4 +1,5 @@
 import { fabric } from "fabric";
+import pako from "pako";
 
 export default class Canvas {
   constructor() {
@@ -9,9 +10,11 @@ export default class Canvas {
     this.grid = null;
     this.gridSize = 20;
     this.saveBtn = null;
+    this.editbtn = null;
     this.removeBtn = null;
     this.counter = null;
     this.save = this.save.bind(this);
+    this.edit = this.edit.bind(this);
     this.remove = this.remove.bind(this);
     this.exportData = [];
     this.savedDimensions = [];
@@ -20,11 +23,21 @@ export default class Canvas {
       height: null,
       data: []
     };
+    this.editData = {
+      id: null,
+      data: []
+    };
     this.selectedDrawings = [];
     this.state = {
-      elements: null,
-      hex: null,
-      counter: null
+      draw: {
+        elements: null,
+        hex: null,
+        counter: null
+      },
+      edit: null
+    };
+    this.editState = {
+      data: []
     };
   }
 
@@ -75,8 +88,10 @@ export default class Canvas {
     this.canvasContainer = document.querySelector("#canvas-container .canvas");
     this.alphabetElement = document.getElementById("alphabet");
     this.saveBtn = document.getElementById("save-btn");
+    this.editbtn = document.getElementById("edit-btn");
     this.removeBtn = document.getElementById("remove-btn");
     this.saveBtn.addEventListener("click", this.save);
+    this.editbtn.addEventListener("click", this.edit);
     this.removeBtn.addEventListener("click", this.remove);
     this.counter = 1;
 
@@ -109,26 +124,6 @@ export default class Canvas {
     this.canvas.add(rect);
   }
 
-  getColorAtPxl(imageData, x, y) {
-    const { width, data } = imageData;
-
-    return {
-      r: data[4 * (width * y + x) + 0],
-      g: data[4 * (width * y + x) + 1],
-      b: data[4 * (width * y + x) + 2],
-      a: data[4 * (width * y + x) + 3]
-    };
-  }
-
-  setColorAtPxl(imageData, color, x, y) {
-    const { width, data } = imageData;
-
-    data[4 * (width * y + x) + 0] = color.r & 0xff;
-    data[4 * (width * y + x) + 1] = color.g & 0xff;
-    data[4 * (width * y + x) + 2] = color.b & 0xff;
-    data[4 * (width * y + x) + 3] = color.a & 0xff;
-  }
-
   newImage(canvas) {
     return new fabric.Image(canvas, {
       left: 0,
@@ -148,8 +143,6 @@ export default class Canvas {
       document.getElementById("canvas-height").value,
       10
     );
-
-    // this.uniqueDimensions = [];
 
     const dimensions = {
       width: actualWidth,
@@ -176,6 +169,13 @@ export default class Canvas {
 
     image.width = 25;
     image.height = 25;
+
+    // save the alphabet editable data to state
+    this.editData = {
+      id: this.counter,
+      data: JSON.stringify(this.canvas.toJSON())
+    };
+    this.editState.data.push(this.editData);
 
     // create div to contain the image
     const imageDiv = document.createElement("div");
@@ -321,9 +321,52 @@ export default class Canvas {
       this.exportData.push({ ...this.pxlData });
     }
 
-    this.updateButtonState();
-    this.saveState();
+    this.updateButtonState(this.alphabet.selected);
     this.counter++;
+    this.saveState();
+  }
+
+  edit() {
+    const image = this.alphabetElement.querySelector(".selected");
+    const dimensions = image.parentElement.parentElement.classList[1]
+      .substring(5)
+      .split("x");
+    const width = parseInt(dimensions[0], 10);
+    const height = parseInt(dimensions[1], 10);
+
+    document.getElementById("canvas-width").value = width;
+    document.getElementById("canvas-height").value = height;
+
+    let selection = parseInt(image.classList[1].substring(6), 10);
+
+    this.editState.data.forEach(item => {
+      if (item.id === selection) {
+        this.canvas.clear();
+        this.canvas.loadFromJSON(item.data, () => {
+          this.canvas.forEachObject(obj => {
+            obj.evented = false;
+
+            const selected = this.canvas.getActiveObjects();
+            if (selected) {
+              selected.forEach(obj => {
+                this.canvas.bringToFront(obj);
+              });
+            }
+          });
+
+          this.canvas.setDimensions({
+            width: width * this.gridSize,
+            height: height * this.gridSize
+          });
+          this.grid.setDimensions({
+            width: width * this.gridSize,
+            height: height * this.gridSize
+          });
+
+          this.canvas.renderAll();
+        });
+      }
+    });
   }
 
   remove() {
@@ -359,59 +402,106 @@ export default class Canvas {
     });
 
     this.alphabet.selected.length = 0;
-    this.updateButtonState();
+    this.updateButtonState(this.alphabet.selected);
     this.saveState();
   }
 
-  updateButtonState() {
-    if (this.alphabetElement.childElementCount === 0) {
-      this.removeBtn.style.opacity = "0.5";
-      this.removeBtn.style.pointerEvents = "none";
-    } else {
+  updateButtonState(array) {
+    if (array.length > 0) {
       this.removeBtn.style.opacity = "1";
       this.removeBtn.style.pointerEvents = "unset";
+      this.editbtn.style.opacity = "1";
+      this.editbtn.style.pointerEvents = "unset";
+    } else {
+      this.removeBtn.style.opacity = "0.5";
+      this.removeBtn.style.pointerEvents = "none";
+      this.editbtn.style.opacity = "0.5";
+      this.editbtn.style.pointerEvents = "none";
     }
   }
 
   saveState() {
     const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
     const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
+    const compressedEditData = pako.gzip(JSON.stringify(this.editState));
 
     this.state = {
-      elements: data,
-      hex: this.exportData,
-      counter: this.counter
+      draw: {
+        elements: data,
+        hex: this.exportData,
+        counter: this.counter
+      },
+      edit: JSON.stringify(compressedEditData)
     };
-    // save to local storage
-    localStorage.setItem("drawings", JSON.stringify(data));
-    localStorage.setItem("drawingsData", JSON.stringify(this.exportData));
-    localStorage.setItem("drawingNum", JSON.stringify(this.counter));
-
     // save to state internally
+    // const dataChunks = async data => {
+    //   const size = 1024 * 1024;
+    //   const total = Math.ceil(data.length / size);
+
+    //   for (let i = 0; i < total; i++) {
+    //     const start = i * size;
+    //     const end = start + size >= data.length ? data.length : start + size;
+    //     const chunk = data.slice(start, end);
+
+    //     // eslint-disable-next-line no-await-in-loop
+    //     await fetch(`/save-data?chunk=${i + 1}&totalChunks=${total}`, {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json"
+    //       },
+    //       body: chunk
+    //     });
+    //   }
+    // };
+
+    // dataChunks(JSON.stringify(this.state))
+    //   .then(() => console.log(`Data saved successfully.`))
+    //   .catch(err => console.error(`Error saving data: ${err}`));
+
     fetch(`/save-data`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(this.state)
-    }).catch(err => console.error(`Error saving data: ${err}`));
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+      })
+      .catch(err => console.error(`Error saving data: ${err}`));
   }
 
   async loadState() {
     try {
       const response = await fetch(`/get-data`);
-      this.state = await response.json();
-      this.exportData = this.state.hex === null ? [] : this.state.hex;
-      this.counter = this.state.counter === null ? 1 : this.state.counter;
+      const data = await response.json();
+      this.state = {
+        draw: {
+          elements: data.elements,
+          hex: data.hex,
+          counter: data.counter
+        },
+        edit: JSON.parse(data.data)
+      };
+      this.exportData = this.state.draw.hex === null ? [] : this.state.draw.hex;
+      this.counter =
+        this.state.draw.counter === null ? 1 : this.state.draw.counter;
+      // const compressedEditData = new Uint8Array(this.state.edit);
+      const compressedEditDataObj = JSON.parse(this.state.edit);
+      const compressedEditDataArray = new Uint8Array(
+        Object.values(compressedEditDataObj)
+      );
+      const decompressedEditData = pako.ungzip(compressedEditDataArray, {
+        to: "string"
+      });
+      this.editState = JSON.parse(decompressedEditData);
 
-      if (this.state.elements && this.state.elements.length > 0) {
+      if (this.state.draw.elements && this.state.draw.elements.length > 0) {
         // clear existing content in the alphabet
         this.alphabetElement.innerHTML = "";
 
         // create array of div elements from state
-        let array = this.state.elements.map(drawing => {
-          // const div = document.createElement("div");
-          // div.innerHTML = drawing;
+        let array = this.state.draw.elements.map(drawing => {
           const parser = new DOMParser();
           const div = parser.parseFromString(drawing, "text/html");
 
@@ -438,7 +528,13 @@ export default class Canvas {
         });
       }
 
-      this.updateButtonState();
+      const selected = document.querySelector("#alphabet .selected");
+
+      if (selected) {
+        selected.classList.remove("selected");
+      }
+
+      this.updateButtonState(this.alphabet.selected);
     } catch (err) {
       console.error(`Error loading data: ${err}`);
     }

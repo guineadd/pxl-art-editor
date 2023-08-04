@@ -1,14 +1,14 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "../styles/styles.css";
-import Canvas from "../components/canvas/canvas";
+import Canvas from "../components/canvas/canvas.js";
 import canvasTemplate from "../components/canvas/canvas.html";
-import Header from "../components/header/header";
+import Header from "../components/header/header.js";
 import headerTemplate from "../components/header/header.html";
-import Toolbox from "../components/toolbox/toolbox";
+import Toolbox from "../components/toolbox/toolbox.js";
 import toolboxTemplate from "../components/toolbox/toolbox.html";
-import Alphabet from "../components/alphabet/alphabet";
+import Alphabet from "../components/alphabet/alphabet.js";
 import alphabetTemplate from "../components/alphabet/alphabet.html";
-import CanvasDef from "../components/canvas-definition/canvas-definition";
+import CanvasDef from "../components/canvas-definition/canvas-definition.js";
 import canvasDefTemplate from "../components/canvas-definition/canvas-definition.html";
 
 // insert html templates into containers
@@ -35,7 +35,7 @@ const canvasDef = new CanvasDef(toolbox);
 
 canvas.setComponents(alphabet);
 toolbox.setComponents(header, canvas);
-header.setComponents(canvas);
+header.setComponents(canvas, alphabet);
 canvasDef.setComponents(toolbox, canvas, header);
 alphabet.setComponents(canvas);
 

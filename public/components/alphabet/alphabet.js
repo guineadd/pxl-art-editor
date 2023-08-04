@@ -16,19 +16,22 @@ export default class Alphabet {
   }
 
   select(div) {
-    if (!div.classList.contains("selected")) {
+    const selected = div.classList.contains("selected");
+
+    this.selected.forEach(div => {
+      div.classList.remove("selected");
+    });
+
+    this.selected = [];
+
+    if (selected) {
+      div.classList.remove("selected");
+    } else if (!selected) {
       div.classList.add("selected");
       this.selected.push(div);
-    } else if (div.classList.contains("selected")) {
-      div.classList.remove("selected");
-      let i = this.selected.indexOf(div);
-
-      if (i > -1) {
-        this.selected.splice(i, 1);
-      }
     }
 
-    this._canvas.updateButtonState();
+    this._canvas.updateButtonState(this.selected);
   }
 
   labelOnOff(div, data) {
