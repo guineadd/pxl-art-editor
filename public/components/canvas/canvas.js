@@ -421,30 +421,6 @@ export default class Canvas {
       },
       edit: JSON.stringify(compressedEditData)
     };
-    // save to state internally
-    // const dataChunks = async data => {
-    //   const size = 1024 * 1024;
-    //   const total = Math.ceil(data.length / size);
-
-    //   for (let i = 0; i < total; i++) {
-    //     const start = i * size;
-    //     const end = start + size >= data.length ? data.length : start + size;
-    //     const chunk = data.slice(start, end);
-
-    //     // eslint-disable-next-line no-await-in-loop
-    //     await fetch(`/save-data?chunk=${i + 1}&totalChunks=${total}`, {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json"
-    //       },
-    //       body: chunk
-    //     });
-    //   }
-    // };
-
-    // dataChunks(JSON.stringify(this.state))
-    //   .then(() => console.log(`Data saved successfully.`))
-    //   .catch(err => console.error(`Error saving data: ${err}`));
 
     fetch(`/save-data`, {
       method: "POST",
@@ -463,18 +439,19 @@ export default class Canvas {
     try {
       const response = await fetch(`/get-data`);
       const data = await response.json();
+
       this.state = {
         draw: {
-          elements: data.elements,
-          hex: data.hex,
-          counter: data.counter
+          elements: JSON.parse(data[0].draw).elements,
+          hex: JSON.parse(data[0].draw).hex,
+          counter: JSON.parse(data[0].draw).counter
         },
-        edit: JSON.parse(data.data)
+        edit: data[0].edit
       };
+      console.log(this.state.edit);
       this.exportData = this.state.draw.hex === null ? [] : this.state.draw.hex;
       this.counter =
         this.state.draw.counter === null ? 1 : this.state.draw.counter;
-      // const compressedEditData = new Uint8Array(this.state.edit);
       const compressedEditDataObj = JSON.parse(this.state.edit);
       const compressedEditDataArray = new Uint8Array(
         Object.values(compressedEditDataObj)
