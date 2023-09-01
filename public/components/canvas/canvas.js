@@ -448,7 +448,7 @@ export default class Canvas {
         },
         edit: data[0].edit
       };
-      console.log(this.state.edit);
+
       this.exportData = this.state.draw.hex === null ? [] : this.state.draw.hex;
       this.counter =
         this.state.draw.counter === null ? 1 : this.state.draw.counter;
