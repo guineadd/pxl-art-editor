@@ -1,7 +1,8 @@
 import express from "express";
 import path from "path";
-// import https from "https";
-import http from "http";
+import fs from "fs";
+import https from "https";
+// import http from "http";
 import dotenv from "dotenv";
 import pako from "pako";
 import { db } from "./db.js";
@@ -113,9 +114,9 @@ app.post("/delete-data", async (req, res) => {
 const port = process.env.port;
 const host = process.env.host;
 
-// const key = fs.readFileSync("private_key.key", "utf8");
-// const cert = fs.readFileSync("client_pxlart.crt", "utf8");
-// const credentials = { key: key, cert: cert };
+const key = fs.readFileSync("private_key.key", "utf8");
+const cert = fs.readFileSync("client_pxlart.crt", "utf8");
+const credentials = { key: key, cert: cert };
 
 // !Uncomment the following for development testing
 
@@ -123,12 +124,13 @@ const host = process.env.host;
 //   console.log(`Server is running at http://localhost:${port}`);
 // });
 
-// ! Uncomment the following for production testing on host's IP
+// ! Uncomment the following for production testing
 
-// const server = https.createServer(credentials, app);
+const server = https.createServer(credentials, app);
 
-const server = http.createServer(app);
+// const server = http.createServer(app);
 
 server.listen(port, host, () => {
+  // console.log("listening at http://%s:%s", host, port);
   console.log("listening at https://%s:%s", host, port);
 });

@@ -363,6 +363,8 @@ export default class Header {
     this.exportDataObj.height = this.convHeight;
     this._canvas.canvasWidth.value = this.convWidth;
     this._canvas.canvasHeight.value = this.convHeight;
+    this._canvas.createdWidth = this._canvas.canvasWidth.value;
+    this._canvas.createdHeight = this._canvas.canvasHeight.value;
     this.canvas.setDimensions({
       width: this.convWidth * this.gridSize,
       height: this.convHeight * this.gridSize
@@ -377,9 +379,9 @@ export default class Header {
 
   parseFile() {
     this.dataArray = [];
-    const dimensionsRegex = /\d+x\d+/;
+    const dimensionsRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/;
     const dimensionsMatch = this.file.match(dimensionsRegex);
-    const dimensions = dimensionsMatch ? dimensionsMatch[0] : null;
+    const dimensions = dimensionsMatch ? dimensionsMatch[1] : null;
     this.convWidth = parseInt(dimensions.split("x")[0], 10);
     this.convHeight = parseInt(dimensions.split("x")[1], 10);
 
@@ -414,7 +416,7 @@ export default class Header {
       let height = data[i].height;
 
       for (let j = 0; j < data[i].data.length; j++) {
-        cppContent += `static const uint8_t glyph_${i}_${j}[] FONT_LOCATION_FLASH_ATTRIBUTE = {\n`;
+        cppContent += `static const uint8_t element_${i}_${j}[] BITMAP_LOCATION_FLASH_ATTRIBUTE = {\n`;
         for (let k = 0; k < data[i].data[j].data.length; k++) {
           cppContent += `    0x${data[i].data[j].data[k]
             .toString(16)
@@ -423,15 +425,15 @@ export default class Header {
         }
 
         cppContent += `}; // Bitmap dimensions ${width}x${height} (width x height)\n`;
-        cppContent += `extern constexpr Bitmap bitmap_glyph_${i}_${j}(glyph_${i}_${j}, ${width}, ${height});\n\n`;
+        cppContent += `extern constexpr Bitmap bitmap_element_${i}_${j}(element_${i}_${j}, ${width}, ${height});\n\n`;
       }
     }
 
-    const cppFileContent = `FONT_LOCATION\n\n${cppContent}`;
+    const cppFileContent = `BITMAP_LOCATION\n\n${cppContent}`;
     const blob = new Blob([cppFileContent], {
       type: "text/plain;charset=utf-8"
     });
 
-    saveAs(blob, "font.cpp");
+    saveAs(blob, "alphabet.cpp");
   }
 }
