@@ -6,6 +6,7 @@ import https from "https";
 import dotenv from "dotenv";
 import pako from "pako";
 import { db } from "./db.js";
+import { sequelize } from "./db.js";
 
 const app = express();
 dotenv.config();
@@ -28,6 +29,15 @@ app.use(
     )
   )
 );
+
+sequelize
+  .sync({ force: false })
+  .then(() => {
+    console.log("Database and tables have been created.");
+  })
+  .catch(err => {
+    console.error(`Error creating database: ${err}`);
+  });
 
 app.get("/favicon.ico", (req, res) => {
   res.sendFile(path.join(path.resolve(), "/favicon.ico"));

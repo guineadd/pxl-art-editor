@@ -4,3 +4,4 @@ coverage
 dist
 src/db.json
 src/edit.json
+src/database.sqlite
