@@ -76,7 +76,7 @@ app.post("/save-data", async (req, res) => {
     let count = await characterModel(sequelize).count();
 
     const font = await fontModel(sequelize).create({
-      FontName: "Test Alphabet"
+      FontName: dataToWrite.draw.collectionTitle
     });
 
     const character = await characterModel(sequelize).create({

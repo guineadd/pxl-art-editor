@@ -32,7 +32,8 @@ export default class Canvas {
       draw: {
         elements: null,
         hex: null,
-        counter: null
+        counter: null,
+        collectionTitle: null
       },
       edit: null
     };
@@ -43,6 +44,7 @@ export default class Canvas {
     this.canvasHeight = null;
     this.createdWidth = null;
     this.createdHeight = null;
+    this.saveFunctionExecuted = null;
   }
 
   setComponents(alphabet) {
@@ -100,7 +102,7 @@ export default class Canvas {
     this.editbtn.addEventListener("click", this.edit);
     this.removeBtn.addEventListener("click", this.remove);
     this.counter = 1;
-
+    this.saveFunctionExecuted = false;
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
     fabric.Object.prototype.objectCaching = false;
@@ -139,6 +141,16 @@ export default class Canvas {
     let duplicateDimensions = this.savedDimensions.findIndex(
       dim => dim.width === dimensions.width && dim.height === dimensions.height
     );
+
+    if (!this.saveFunctionExecuted) {
+      let alphabetName = document.getElementById("alphabetName");
+      const timestampInSeconds = new Date()
+        .getTime()
+        .toString()
+        .slice(-6);
+      alphabetName.innerHTML = `Unsaved Collection ${timestampInSeconds}`;
+      this.saveFunctionExecuted = true;
+    }
 
     if (duplicateDimensions === -1) {
       this.savedDimensions.push(dimensions);
@@ -412,7 +424,7 @@ export default class Canvas {
     const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
     const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
     const compressedEditData = pako.gzip(JSON.stringify(this.editState));
-
+    const collectionTitle = document.getElementById("alphabetName").innerHTML;
     const alphabet = document.createElement("div");
     alphabet.innerHTML = data[0];
     const imageDivs = alphabet.querySelectorAll(".image-div");
@@ -422,7 +434,8 @@ export default class Canvas {
       draw: {
         elements: images,
         hex: this.exportData,
-        counter: this.counter
+        counter: this.counter,
+        collectionTitle: collectionTitle
       },
       edit: JSON.stringify(compressedEditData)
     };
@@ -449,7 +462,8 @@ export default class Canvas {
         draw: {
           elements: JSON.parse(data[0].draw).elements,
           hex: JSON.parse(data[0].draw).hex,
-          counter: JSON.parse(data[0].draw).counter
+          counter: JSON.parse(data[0].draw).counter,
+          collectionTitle: JSON.parse(data[0].draw).collectionTitle
         },
         edit: data[0].edit
       };
