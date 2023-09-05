@@ -413,9 +413,14 @@ export default class Canvas {
     const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
     const compressedEditData = pako.gzip(JSON.stringify(this.editState));
 
+    const alphabet = document.createElement("div");
+    alphabet.innerHTML = data[0];
+    const imageDivs = alphabet.querySelectorAll(".image-div");
+    const images = Array.from(imageDivs).map(img => img.outerHTML);
+
     this.state = {
       draw: {
-        elements: data,
+        elements: images,
         hex: this.exportData,
         counter: this.counter
       },

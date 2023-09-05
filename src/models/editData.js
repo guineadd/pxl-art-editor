@@ -11,7 +11,7 @@ export function editDataModel(seq) {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Character",
+        model: "Characters",
         key: "Id"
       }
     },

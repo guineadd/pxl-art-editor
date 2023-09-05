@@ -11,7 +11,7 @@ export function characterModel(seq) {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Font",
+        model: "Fonts",
         key: "Id"
       }
     },
