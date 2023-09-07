@@ -36,8 +36,6 @@ export default class Header {
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
     this.export = this.export.bind(this);
-    // this.new = this.newOrLoad.bind(this);
-    // this.load = this.load.bind(this);
     this.content = this.content.bind(this);
   }
 

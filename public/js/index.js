@@ -10,6 +10,8 @@ import Alphabet from "../components/alphabet/alphabet.js";
 import alphabetTemplate from "../components/alphabet/alphabet.html";
 import CanvasDef from "../components/canvas-definition/canvas-definition.js";
 import canvasDefTemplate from "../components/canvas-definition/canvas-definition.html";
+import StartDialog from "../components/start-dialog/start-dalog.js";
+import startDialogTemplate from "../components/start-dialog/start-dalog.html";
 
 // insert html templates into containers
 const canvasElement = document.getElementById("canvas-container");
@@ -27,10 +29,14 @@ alphabetElement.innerHTML = alphabetTemplate;
 const canvasDefElement = document.getElementById("canvas-def-container");
 canvasDefElement.innerHTML = canvasDefTemplate;
 
+const startDialogElement = document.getElementById("start-dialog-container");
+startDialogElement.innerHTML = startDialogTemplate;
+
 const canvas = new Canvas();
 const header = new Header();
 const toolbox = new Toolbox();
 const alphabet = new Alphabet();
+const startDialog = new StartDialog();
 const canvasDef = new CanvasDef(toolbox);
 
 canvas.setComponents(alphabet);
@@ -38,9 +44,11 @@ toolbox.setComponents(header, canvas);
 header.setComponents(canvas, alphabet);
 canvasDef.setComponents(toolbox, canvas, header);
 alphabet.setComponents(canvas);
+startDialog.setComponents(canvas);
 
 // render the components after inserting the HTML templates
 canvas.render(500, 500);
+startDialog.render();
 header.render();
 toolbox.toolSelect();
 toolbox.render();

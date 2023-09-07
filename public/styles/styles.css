@@ -44,6 +44,15 @@ body {
   margin: 5px;
 }
 
+#confirm-save-modal-btn:disabled:hover {
+  background-color: rgb(133 60 81);
+  cursor: default;
+}
+
+#confirm-save-modal-btn:disabled {
+  opacity: 0.6;
+}
+
 .image-div {
   display: flex;
   align-items: center;

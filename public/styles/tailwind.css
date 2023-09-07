@@ -598,8 +598,20 @@ video {
   height: 4rem;
 }
 
+.h-\[150px\] {
+  height: 150px;
+}
+
 .h-\[180px\] {
   height: 180px;
+}
+
+.h-\[20px\] {
+  height: 20px;
+}
+
+.h-\[250px\] {
+  height: 250px;
 }
 
 .h-\[320px\] {
@@ -672,6 +684,10 @@ video {
 
 .w-\[60px\] {
   width: 60px;
+}
+
+.w-\[700px\] {
+  width: 700px;
 }
 
 .w-screen {
@@ -753,6 +769,11 @@ video {
   border-style: none;
 }
 
+.border-gray-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(156 163 175 / var(--tw-border-opacity));
+}
+
 .bg-black\/30 {
   background-color: rgb(0 0 0 / 0.3);
 }
@@ -788,6 +809,10 @@ video {
 
 .p-1 {
   padding: 0.25rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
 }
 
 .p-4 {
@@ -844,6 +869,25 @@ video {
   line-height: 1.75rem;
 }
 
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
 .font-semibold {
   font-weight: 600;
 }
@@ -851,6 +895,11 @@ video {
 .text-black {
   --tw-text-opacity: 1;
   color: rgb(0 0 0 / var(--tw-text-opacity));
+}
+
+.text-red-700 {
+  --tw-text-opacity: 1;
+  color: rgb(185 28 28 / var(--tw-text-opacity));
 }
 
 .text-secondary-normal {
@@ -932,6 +981,15 @@ body {
   flex-direction: column;
   align-items: start;
   margin: 5px;
+}
+
+#confirm-save-modal-btn:disabled:hover {
+  background-color: rgb(133 60 81);
+  cursor: default;
+}
+
+#confirm-save-modal-btn:disabled {
+  opacity: 0.6;
 }
 
 .image-div {
@@ -1136,14 +1194,27 @@ body {
   color: rgb(156 163 175 / var(--tw-text-opacity));
 }
 
+.hover\:text-header-hover:hover {
+  --tw-text-opacity: 1;
+  color: rgb(99 84 86 / var(--tw-text-opacity));
+}
+
 .hover\:text-secondary-hover:hover {
   --tw-text-opacity: 1;
   color: rgb(107 43 61 / var(--tw-text-opacity));
 }
 
+.hover\:opacity-50:hover {
+  opacity: 0.5;
+}
+
 .focus\:outline-none:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
+}
+
+.focus\:outline-slate-600:focus {
+  outline-color: #475569;
 }
 
 .group:hover .group-hover\:text-gray-400 {
