@@ -361,10 +361,12 @@ export default class StartDialog {
         }
       };
 
-      const inputFocusOutHandler = () => {
-        input.style = "";
-        edit.classList.remove("fa-save");
-        edit.classList.add("fa-edit");
+      const inputFocusOutHandler = e => {
+        if (e.target !== !input && !input.contains(e.target)) {
+          input.style = "";
+          edit.classList.remove("fa-save");
+          edit.classList.add("fa-edit");
+        }
       };
 
       this.collectionHandler.push(collectionHandler);
@@ -377,7 +379,7 @@ export default class StartDialog {
       edit.addEventListener("click", editIconHandler);
       del.addEventListener("click", delIconHandler);
       input.addEventListener("keydown", enterKeyHandler);
-      input.addEventListener("blur", inputFocusOutHandler);
+      input.addEventListener("click", inputFocusOutHandler);
     });
   }
 

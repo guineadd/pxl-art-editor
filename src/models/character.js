@@ -15,7 +15,17 @@ export function characterModel(seq) {
         key: "Id"
       }
     },
-    Html: {
+    Width: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    Height: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    CharacterData: {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: ""

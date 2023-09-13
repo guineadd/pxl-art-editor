@@ -9,8 +9,6 @@ import { db } from "./db.js";
 import { sequelize } from "./db.js";
 import { collectionModel } from "./models/collection.js";
 import { characterModel } from "./models/character.js";
-import { hexDataModel } from "./models/hexData.js";
-import { editDataModel } from "./models/editData.js";
 
 const app = express();
 dotenv.config();
@@ -115,12 +113,12 @@ app.put("/update-collection-name/:collectionId", async (req, res) => {
 app.post("/save-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
-    const compressedEditData = JSON.parse(dataToWrite.edit);
-    const uncompressedEditData = JSON.parse(
-      pako.ungzip(new Uint8Array(Object.values(compressedEditData)), {
-        to: "string"
-      })
-    );
+    // const compressedEditData = JSON.parse(dataToWrite.edit);
+    // const uncompressedEditData = JSON.parse(
+    //   pako.ungzip(new Uint8Array(Object.values(compressedEditData)), {
+    //     to: "string"
+    //   })
+    // );
 
     let count = await characterModel(sequelize).count();
 
@@ -133,21 +131,7 @@ app.post("/save-data", async (req, res) => {
       Html: dataToWrite.draw.elements[count]
     });
 
-    const hexData = await hexDataModel(sequelize).create({
-      CharacterId: character.dataValues.Id,
-      Width: dataToWrite.draw.hex[0].width,
-      Height: dataToWrite.draw.hex[0].height,
-      DataString: JSON.stringify(dataToWrite.draw.hex[0].data[count])
-    });
-
-    const editData = await editDataModel(sequelize).create({
-      CharacterId: character.dataValues.Id,
-      EditString: JSON.stringify(uncompressedEditData.data[count])
-    });
-
     console.log(`New element added with ID: ${character.dataValues.Id}`);
-    console.log(`New hex data added with ID: ${hexData.dataValues.Id}`);
-    console.log(`New edit data added with ID: ${editData.dataValues.Id}`);
     res.status(200).send("Data saved successfully.");
   } catch (err) {
     console.error(`Error adding data: ${err}`);
