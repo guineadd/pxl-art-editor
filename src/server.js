@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import pako from "pako";
 import { db } from "./db.js";
 import { sequelize } from "./db.js";
-import { fontModel } from "./models/font.js";
+import { collectionModel } from "./models/collection.js";
 import { characterModel } from "./models/character.js";
 import { hexDataModel } from "./models/hexData.js";
 import { editDataModel } from "./models/editData.js";
@@ -63,6 +63,55 @@ app.get("/get-data", async (req, res) => {
   });
 });
 
+app.get("/collections", async (req, res) => {
+  try {
+    const collections = await collectionModel(sequelize).findAll();
+    res.status(200).json(collections);
+  } catch (err) {
+    console.error(`Error fetching collections: ${err}`);
+    res.status(500).send("Error fetching collections.");
+  }
+});
+
+app.post("/save-collection", async (req, res) => {
+  try {
+    const data = req.body;
+    const collection = await collectionModel(sequelize).create({
+      CollectionName: data.collectionName
+    });
+
+    console.log(
+      `New collection created with name: ${collection.dataValues.CollectionName}`
+    );
+    res.status(200).send("Collection created successfully.");
+  } catch (err) {
+    console.error(`Error saving collection: ${err}`);
+    res.status(500).send("Error creating collection.");
+  }
+});
+
+app.put("/update-collection-name/:collectionId", async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+    const { newCollectionName } = req.body;
+
+    const collection = await collectionModel(sequelize).findByPk(collectionId);
+
+    if (!collection) {
+      return res.status(404).send("Collection not found.");
+    }
+
+    collection.CollectionName = newCollectionName;
+    await collection.save();
+
+    console.log(`Collection name updated with: ${newCollectionName}`);
+    res.status(200).send("Collection name updated successfully.");
+  } catch (err) {
+    console.error(`Error updating collection name: ${err}`);
+    res.status(500).send("Error updating collection name.");
+  }
+});
+
 app.post("/save-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
@@ -75,12 +124,12 @@ app.post("/save-data", async (req, res) => {
 
     let count = await characterModel(sequelize).count();
 
-    const font = await fontModel(sequelize).create({
-      FontName: dataToWrite.draw.collectionTitle
+    const collection = await collectionModel(sequelize).create({
+      CollectionName: dataToWrite.draw.collectionTitle
     });
 
     const character = await characterModel(sequelize).create({
-      FontId: font.dataValues.Id,
+      FontId: collection.dataValues.Id,
       Html: dataToWrite.draw.elements[count]
     });
 

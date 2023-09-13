@@ -7,11 +7,11 @@ export function characterModel(seq) {
       primaryKey: true,
       autoIncrement: true
     },
-    FontId: {
+    CollectionId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Fonts",
+        model: "Collections",
         key: "Id"
       }
     },

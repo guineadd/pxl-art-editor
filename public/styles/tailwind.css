@@ -570,6 +570,10 @@ video {
   margin: 0.75rem;
 }
 
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -656,6 +660,10 @@ video {
 
 .w-\[200px\] {
   width: 200px;
+}
+
+.w-\[30px\] {
+  width: 30px;
 }
 
 .w-\[400px\] {
@@ -983,13 +991,29 @@ body {
   margin: 5px;
 }
 
-#confirm-save-modal-btn:disabled:hover {
+#confirm-save-modal-btn:disabled:hover,
+#confirm-load-file-modal-btn:disabled:hover {
   background-color: rgb(133 60 81);
   cursor: default;
 }
 
-#confirm-save-modal-btn:disabled {
+#confirm-save-modal-btn:disabled,
+#confirm-load-file-modal-btn:disabled {
   opacity: 0.6;
+}
+
+.input-default {
+  color: "#853c51";
+  background-color: unset;
+  pointer-events: none;
+  text-decoration: none;
+}
+
+.input-selected {
+  color: #635456;
+  background-color: #f3f4f6;
+  pointer-events: none;
+  text-decoration: underline;
 }
 
 .image-div {
@@ -1177,6 +1201,11 @@ body {
 
 .hover\:cursor-pointer:hover {
   cursor: pointer;
+}
+
+.hover\:bg-gray-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity));
 }
 
 .hover\:bg-header-hover:hover {

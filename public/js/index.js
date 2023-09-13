@@ -10,8 +10,8 @@ import Alphabet from "../components/alphabet/alphabet.js";
 import alphabetTemplate from "../components/alphabet/alphabet.html";
 import CanvasDef from "../components/canvas-definition/canvas-definition.js";
 import canvasDefTemplate from "../components/canvas-definition/canvas-definition.html";
-import StartDialog from "../components/start-dialog/start-dalog.js";
-import startDialogTemplate from "../components/start-dialog/start-dalog.html";
+import StartDialog from "../components/start-dialog/start-dialog.js";
+import startDialogTemplate from "../components/start-dialog/start-dialog.html";
 
 // insert html templates into containers
 const canvasElement = document.getElementById("canvas-container");

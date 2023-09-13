@@ -44,13 +44,29 @@ body {
   margin: 5px;
 }
 
-#confirm-save-modal-btn:disabled:hover {
+#confirm-save-modal-btn:disabled:hover,
+#confirm-load-file-modal-btn:disabled:hover {
   background-color: rgb(133 60 81);
   cursor: default;
 }
 
-#confirm-save-modal-btn:disabled {
+#confirm-save-modal-btn:disabled,
+#confirm-load-file-modal-btn:disabled {
   opacity: 0.6;
+}
+
+.input-default {
+  color: "#853c51";
+  background-color: unset;
+  pointer-events: none;
+  text-decoration: none;
+}
+
+.input-selected {
+  color: #635456;
+  background-color: #f3f4f6;
+  pointer-events: none;
+  text-decoration: underline;
 }
 
 .image-div {
