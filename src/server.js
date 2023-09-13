@@ -97,6 +97,26 @@ app.put("/update-collection-name/:collectionId", async (req, res) => {
   }
 });
 
+app.delete("/delete-collection/:collectionId", async (req, res) => {
+  try {
+    const { collectionId } = req.params;
+
+    const collection = await collectionModel(sequelize).findByPk(collectionId);
+
+    if (!collection) {
+      return res.status(404).send("Collection not found.");
+    }
+
+    await collection.destroy();
+
+    console.log(`Collection with ID ${collectionId} has been deleted.`);
+    res.status(200).send("Collection deleted successfully");
+  } catch (err) {
+    console.error(`Error deleting collection: ${err}`);
+    res.status(500).send("Error deleting collection.");
+  }
+});
+
 app.post("/save-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
