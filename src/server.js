@@ -48,19 +48,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(path.resolve(), "/public/index.html"));
 });
 
-app.get("/get-data", async (req, res) => {
-  const query = "SELECT draw, edit FROM data_table";
-
-  db.all(query, (err, rows) => {
-    if (err) {
-      console.error(`Error reading data from the database: ${err}`);
-      res.status(500).json({ error: "Error reading data from the database." });
-    } else {
-      res.json(rows);
-    }
-  });
-});
-
 app.get("/collections", async (req, res) => {
   try {
     const collections = await collectionModel(sequelize).findAll();
@@ -113,25 +100,24 @@ app.put("/update-collection-name/:collectionId", async (req, res) => {
 app.post("/save-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
-    // const compressedEditData = JSON.parse(dataToWrite.edit);
-    // const uncompressedEditData = JSON.parse(
-    //   pako.ungzip(new Uint8Array(Object.values(compressedEditData)), {
-    //     to: "string"
-    //   })
-    // );
+    const CollectionName = dataToWrite.collectionTitle;
+    const CharacterData = dataToWrite.hex[0];
+    const CharacterHex = CharacterData.data[0];
+    console.log(CharacterHex);
 
-    let count = await characterModel(sequelize).count();
-
-    const collection = await collectionModel(sequelize).create({
-      CollectionName: dataToWrite.draw.collectionTitle
+    // check if a collection with the same name already exists
+    let existingCollection = await collectionModel(sequelize).findOne({
+      where: { CollectionName }
     });
 
-    const character = await characterModel(sequelize).create({
-      FontId: collection.dataValues.Id,
-      Html: dataToWrite.draw.elements[count]
+    await characterModel(sequelize).create({
+      CollectionId: existingCollection.Id,
+      CharacterData: JSON.stringify(CharacterHex),
+      Width: CharacterData.width,
+      Height: CharacterData.height
     });
 
-    console.log(`New element added with ID: ${character.dataValues.Id}`);
+    console.log(`New element added to: ${CollectionName}`);
     res.status(200).send("Data saved successfully.");
   } catch (err) {
     console.error(`Error adding data: ${err}`);
@@ -139,31 +125,18 @@ app.post("/save-data", async (req, res) => {
   }
 });
 
-// app.post("/save-data", async (req, res) => {
-//   const dataToWrite = req.body;
-//   const deleteQuery = "DELETE FROM data_table";
+app.get("/get-data", async (req, res) => {
+  const query = "SELECT draw, edit FROM data_table";
 
-//   db.run(deleteQuery, deleteErr => {
-//     if (deleteErr) {
-//       console.error(`Error clearing table data: ${deleteErr}`);
-//       res.status(500).send("Error clearing table data.");
-//     } else {
-//       const insertQuery = "INSERT INTO data_table (draw, edit) VALUES (?, ?)";
-//       const { draw, edit } = dataToWrite;
-//       const drawJson = JSON.stringify(draw);
-//       const values = [drawJson, edit];
-
-//       db.run(insertQuery, values, err => {
-//         if (err) {
-//           console.error(`Error writing data to the database: ${err}`);
-//           res.status(500).send("Error saving data.");
-//         } else {
-//           res.send("Data saved successfully.");
-//         }
-//       });
-//     }
-//   });
-// });
+  db.all(query, (err, rows) => {
+    if (err) {
+      console.error(`Error reading data from the database: ${err}`);
+      res.status(500).json({ error: "Error reading data from the database." });
+    } else {
+      res.json(rows);
+    }
+  });
+});
 
 app.post("/delete-data", async (req, res) => {
   const newData = {

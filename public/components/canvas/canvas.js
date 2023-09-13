@@ -44,7 +44,6 @@ export default class Canvas {
     this.canvasHeight = null;
     this.createdWidth = null;
     this.createdHeight = null;
-    this.saveFunctionExecuted = null;
   }
 
   setComponents(alphabet) {
@@ -102,7 +101,6 @@ export default class Canvas {
     this.editbtn.addEventListener("click", this.edit);
     this.removeBtn.addEventListener("click", this.remove);
     this.counter = 1;
-    this.saveFunctionExecuted = false;
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
     fabric.Object.prototype.objectCaching = false;
@@ -128,7 +126,6 @@ export default class Canvas {
   }
 
   save() {
-    // get the user-defined dimensions
     const actualWidth = parseInt(this.createdWidth, 10);
     const actualHeight = parseInt(this.createdHeight, 10);
 
@@ -136,128 +133,6 @@ export default class Canvas {
       width: actualWidth,
       height: actualHeight
     };
-
-    // filter the array to remove duplicate dimensions
-    let duplicateDimensions = this.savedDimensions.findIndex(
-      dim => dim.width === dimensions.width && dim.height === dimensions.height
-    );
-
-    if (!this.saveFunctionExecuted) {
-      let alphabetName = document.getElementById("alphabetName");
-      const timestampInSeconds = new Date()
-        .getTime()
-        .toString()
-        .slice(-6);
-      alphabetName.innerHTML = `Unsaved Collection ${timestampInSeconds}`;
-      this.saveFunctionExecuted = true;
-    }
-
-    if (duplicateDimensions === -1) {
-      this.savedDimensions.push(dimensions);
-    } else {
-      this.savedDimensions[duplicateDimensions] = dimensions;
-    }
-
-    // convert the canvas to a data URL
-    const dataURL = this.canvas.toDataURL();
-
-    // create an element to display the data as an image
-    const image = new Image();
-    image.src = dataURL;
-
-    image.width = 25;
-    image.height = 25;
-
-    // save the alphabet editable data to state
-    this.editData = {
-      id: this.counter,
-      data: JSON.stringify(this.canvas.toJSON())
-    };
-    this.editState.data.push(this.editData);
-
-    // create div to contain the image
-    const imageDiv = document.createElement("div");
-    imageDiv.classList.add(`image-div`, `image-${this.counter}`);
-    imageDiv.appendChild(image);
-
-    // event listener to add the .selected class on click
-    imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
-
-    // find matching div based on dimensions
-    const sizeDivs = document.getElementsByClassName(
-      `size_${actualWidth}x${actualHeight}`
-    );
-
-    let matching = false;
-
-    for (const sizeDiv of sizeDivs) {
-      const sizeDivImages = sizeDiv.getElementsByTagName("img");
-
-      if (sizeDivImages.length > 0) {
-        const firstImage = sizeDivImages[0];
-
-        if (
-          firstImage.width === image.width &&
-          firstImage.height === image.height
-        ) {
-          sizeDiv
-            .getElementsByClassName("image-container")[0]
-            .appendChild(imageDiv);
-          matching = true;
-          break;
-        }
-      }
-    }
-
-    // if there is no match, create a new div
-    if (!matching) {
-      const sizeDiv = document.createElement("div");
-      sizeDiv.classList.add(
-        `size-div`,
-        `size_${actualWidth}x${actualHeight}`,
-        `enabled`
-      );
-
-      const dimensionsDiv = document.createElement("div");
-      dimensionsDiv.classList.add("dimensions-container");
-      dimensionsDiv.innerHTML = `<h5>Size ${actualWidth} x ${actualHeight}</h5>`;
-
-      const imageContainerDiv = document.createElement("div");
-      imageContainerDiv.classList.add("image-container");
-      imageContainerDiv.appendChild(imageDiv);
-
-      this.alphabetElement.appendChild(sizeDiv);
-      sizeDiv.appendChild(dimensionsDiv);
-      sizeDiv.appendChild(imageContainerDiv);
-
-      let dimensions = sizeDiv.childNodes[0];
-      dimensions.addEventListener("click", () => {
-        this.alphabet.labelOnOff(dimensions, this.exportData);
-      });
-    }
-
-    // sort the created div elements based on height
-    const sortedDivs = Array.from(
-      this.alphabetElement.getElementsByClassName("size-div")
-    ).sort((a, b) => {
-      const aClass = a.className.match(/size_(\d+)x(\d+)/);
-      const bClass = b.className.match(/size_(\d+)x(\d+)/);
-
-      if (aClass && aClass.length === 3 && bClass && bClass.length === 3) {
-        const aHeight = parseInt(aClass[2], 10);
-        const bHeight = parseInt(bClass[2], 10);
-
-        return bHeight - aHeight;
-      }
-
-      // if there is no class name, retain the same order
-      return 0;
-    });
-
-    // reorder the div elements in the alphabet
-    sortedDivs.forEach(sizeDiv => {
-      this.alphabetElement.appendChild(sizeDiv);
-    });
 
     // create a temporary fabric.Canvas instance to render the fabric.js canvas content
     const tempCanvas = document.createElement("canvas");
@@ -320,8 +195,41 @@ export default class Canvas {
     }
 
     this.updateButtonState(this.alphabet.selected);
+
+    const collectionTitle = document.getElementById("alphabetName").innerHTML;
+
+    let saveBody = {
+      hex: this.exportData,
+      counter: this.counter,
+      width: this.createdWidth,
+      height: this.createdHeight,
+      collectionTitle: collectionTitle
+    };
+
+    fetch(`/save-data`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(saveBody)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+      })
+      .catch(err => console.error(`Error saving data: ${err}`));
     this.counter++;
-    this.saveState();
+
+    this.paintFromDb();
+  }
+
+  async paintFromDb() {
+    try {
+      const response = await fetch(`/get-data`);
+      const data = await response.json();
+      console.log(data);
+    } catch (err) {
+      console.error(`Error loading data: ${err}`);
+    }
   }
 
   edit() {
@@ -418,39 +326,6 @@ export default class Canvas {
       this.editbtn.style.opacity = "0.5";
       this.editbtn.style.pointerEvents = "none";
     }
-  }
-
-  saveState() {
-    const sizeDivs = this.alphabetElement.getElementsByClassName("size-div");
-    const data = Array.from(sizeDivs).map(drawing => drawing.outerHTML);
-    const compressedEditData = pako.gzip(JSON.stringify(this.editState));
-    const collectionTitle = document.getElementById("alphabetName").innerHTML;
-    const alphabet = document.createElement("div");
-    alphabet.innerHTML = data[0];
-    const imageDivs = alphabet.querySelectorAll(".image-div");
-    const images = Array.from(imageDivs).map(img => img.outerHTML);
-
-    this.state = {
-      draw: {
-        elements: images,
-        hex: this.exportData,
-        counter: this.counter,
-        collectionTitle: collectionTitle
-      },
-      edit: JSON.stringify(compressedEditData)
-    };
-
-    fetch(`/save-data`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(this.state)
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
-      })
-      .catch(err => console.error(`Error saving data: ${err}`));
   }
 
   async loadState() {
