@@ -992,13 +992,15 @@ body {
 }
 
 #confirm-save-modal-btn:disabled:hover,
-#confirm-load-file-modal-btn:disabled:hover {
+#confirm-load-file-modal-btn:disabled:hover,
+#confirm-load-db-modal-btn:disabled:hover {
   background-color: rgb(133 60 81);
   cursor: default;
 }
 
 #confirm-save-modal-btn:disabled,
-#confirm-load-file-modal-btn:disabled {
+#confirm-load-file-modal-btn:disabled,
+#confirm-load-db-modal-btn:disabled {
   opacity: 0.6;
 }
 

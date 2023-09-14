@@ -6,6 +6,7 @@ export default class Canvas {
     this.canvasContainer = null;
     this.canvas = null;
     this.alphabet = null;
+    this.header = null;
     this.alphabetElement = null;
     this.grid = null;
     this.gridSize = 20;
@@ -46,8 +47,9 @@ export default class Canvas {
     this.createdHeight = null;
   }
 
-  setComponents(alphabet) {
+  setComponents(alphabet, header) {
     this.alphabet = alphabet;
+    this.header = header;
   }
 
   render(width, height) {
@@ -197,12 +199,14 @@ export default class Canvas {
     this.updateButtonState(this.alphabet.selected);
 
     const collectionTitle = document.getElementById("alphabetName").innerHTML;
+    console.log("this.pxlData", this.pxlData);
+    console.log("this.exportData", this.exportData);
+    console.log("pxlArray", pxlArray);
 
     let saveBody = {
-      hex: this.exportData,
-      counter: this.counter,
-      width: this.createdWidth,
-      height: this.createdHeight,
+      hex: pxlArray,
+      width: dimensions.width,
+      height: dimensions.height,
       collectionTitle: collectionTitle
     };
 
@@ -218,18 +222,122 @@ export default class Canvas {
       })
       .catch(err => console.error(`Error saving data: ${err}`));
     this.counter++;
-
-    this.paintFromDb();
+    this.paintFromDb(pxlArray);
   }
 
-  async paintFromDb() {
-    try {
-      const response = await fetch(`/get-data`);
-      const data = await response.json();
-      console.log(data);
-    } catch (err) {
-      console.error(`Error loading data: ${err}`);
+  paintFromDb(pxlArray) {
+    let paintData = pxlArray.data;
+    console.log(paintData);
+    const canvas = document.createElement("canvas");
+    canvas.width = this.pxlData.width;
+    canvas.height = this.pxlData.height;
+    const context = canvas.getContext("2d");
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.id = "temp-canvas";
+    const fabricCanvas = new fabric.Canvas("temp-canvas", {
+      // backgroundColor: "white"
+      // preserveObjectStacking: true
+    });
+
+    // paintData.forEach(data => {
+    for (let x = 0; x < canvas.width; x++) {
+      let byteIndex = x * Math.ceil(canvas.height / 8);
+      let remainingBits = 8;
+
+      for (let y = 0; y < canvas.height; y++) {
+        const bitIndex = y % 8;
+        const bit = (paintData[byteIndex] >> bitIndex) & 1;
+
+        const color = bit === 1 ? "black" : "white";
+        context.fillStyle = color;
+        context.fillRect(x, y, 1, 1);
+
+        const pixel = new fabric.Rect({
+          left: x * this.gridSize,
+          top: y * this.gridSize,
+          width: this.gridSize,
+          height: this.gridSize,
+          fill: color,
+          evented: false
+        });
+
+        fabricCanvas.add(pixel).bringToFront(pixel);
+        remainingBits--;
+
+        if (remainingBits === 0) {
+          byteIndex++;
+          remainingBits = Math.min(8, canvas.height - (y + 1));
+        }
+      }
     }
+
+    const scaledCanvas = document.createElement("canvas");
+    scaledCanvas.width = canvas.width * 25;
+    scaledCanvas.height = canvas.height * 25;
+    const scaledContext = scaledCanvas.getContext("2d");
+    scaledContext.imageSmoothingEnabled = false;
+    scaledContext.drawImage(
+      canvas,
+      0,
+      0,
+      scaledCanvas.width,
+      scaledCanvas.height
+    );
+
+    const dataURL = scaledCanvas.toDataURL();
+    const image = new Image();
+    image.src = dataURL;
+    image.width = 25;
+    image.height = 25;
+
+    const dimensionsDiv = document.querySelector(
+      `.size_${canvas.width}x${canvas.height}`
+    );
+
+    const dimensionsContainer = document.getElementsByClassName(
+      "dimensions-container"
+    );
+
+    const imageDiv = document.createElement("div");
+    imageDiv.classList.add(`image-div`, `image-${this.counter}`);
+    imageDiv.style =
+      "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
+
+    if (dimensionsDiv) {
+      console.log("1");
+      dimensionsDiv
+        .querySelector(`.image-container_${canvas.width}x${canvas.height}`)
+        .appendChild(imageDiv);
+    } else {
+      console.log("2");
+      let sizeDiv = `
+        <div class="size-div size_${canvas.width}x${canvas.height} enabled" style="order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;">
+            <div class="dimensions-container" style="display: flex; margin: 5px 0;"><h5>Size ${canvas.width} x ${canvas.height}</h5></div>
+                <div class="image-container_${canvas.width}x${canvas.height}" style="pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;">
+            </div>
+        </div>
+      `;
+      this.alphabetElement.innerHTML += sizeDiv;
+      const imageContainer = document.querySelector(
+        `.image-container_${canvas.width}x${canvas.height}`
+      );
+      imageContainer.appendChild(imageDiv);
+    }
+
+    imageDiv.appendChild(image);
+    imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
+
+    this.header.exportDataObj.data.push({ id: this.counter, data: paintData });
+    // });
+
+    dimensionsContainer[0].addEventListener("click", () => {
+      this.alphabet.labelOnOff(dimensionsContainer[0], this._canvas.exportData);
+    });
+
+    this.header.exportDataObj.width = canvas.width;
+    this.header.exportDataObj.height = canvas.height;
+    this.exportData.push(this.header.exportDataObj);
   }
 
   edit() {

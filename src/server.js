@@ -121,7 +121,7 @@ app.post("/save-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
-    const CharacterData = dataToWrite.hex[0];
+    const CharacterData = dataToWrite.hex;
     const CharacterHex = CharacterData.data[0];
     console.log(CharacterHex);
 

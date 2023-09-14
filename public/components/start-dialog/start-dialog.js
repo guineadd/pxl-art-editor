@@ -15,6 +15,7 @@ export default class StartDialog {
     this.enterKeyHandler = [];
     this.inputFocusOutHandler = [];
     this.collectionId = [];
+    this.collectionNames = [];
     this.currentSelection = null;
   }
 
@@ -132,15 +133,7 @@ export default class StartDialog {
     const fileInput = document.getElementById("start-modal-load-file");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
 
-    collectionName.focus();
-    inputAlert.classList.add("hidden");
-    collectionName.value = "";
-
-    collectionName.addEventListener("input", () => {
-      confirmBtn.disabled = !collectionName.value;
-    });
-
-    confirmBtn.addEventListener("click", () => {
+    const fileDialog = () => {
       if (validFilenameRegex.test(collectionName.value)) {
         fileInput.click();
       } else {
@@ -149,9 +142,20 @@ export default class StartDialog {
         inputAlert.classList.remove("hidden");
         console.log("Invalid filename. Please enter a valid filename.");
       }
+    };
+
+    collectionName.focus();
+    inputAlert.classList.add("hidden");
+    collectionName.value = "";
+
+    collectionName.addEventListener("input", () => {
+      confirmBtn.disabled = !collectionName.value;
     });
 
+    confirmBtn.addEventListener("click", fileDialog);
+
     cancelBtn.addEventListener("click", async () => {
+      confirmBtn.removeEventListener("click", fileDialog);
       collectionContainer.classList.add("hidden");
       this.startModal.classList.remove("hidden");
     });
@@ -161,10 +165,12 @@ export default class StartDialog {
     const response = await fetch("/collections");
     this.collections = await response.json();
 
+    const alphabetName = document.getElementById("alphabetName");
     this.collectionId = [];
 
     this.collections.forEach(item => {
       this.collectionId.push(item.Id);
+      this.collectionNames.push(item.CollectionName);
     });
 
     const collectionContainer = document.getElementById(
@@ -173,25 +179,12 @@ export default class StartDialog {
     const confirmBtn = document.getElementById("confirm-load-db-modal-btn");
     const cancelBtn = document.getElementById("cancel-load-db-modal-btn");
     const collections = document.querySelectorAll(`[class*="collection-id"]`);
-    const inputContainers = document.querySelectorAll(
-      `[class*="collection-name"]`
-    );
 
     this.buildCollectionList();
 
-    inputContainers.forEach(item => {
-      item.addEventListener("click", () => {
-        collections.forEach(collection => {
-          let input = collection.querySelector("span > input");
-          if (input.classList.contains("input-selected")) {
-            confirmBtn.disabled = !confirmBtn.disabled;
-          }
-        });
-      });
-    });
-
     confirmBtn.addEventListener("click", async () => {
       this.loadDbCollectionModal.classList.add("hidden");
+      alphabetName.innerHTML = `${this.collectionNames[this.currentSelection]}`;
       this.removeEventListeners(collections);
     });
 

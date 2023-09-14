@@ -39,7 +39,7 @@ const alphabet = new Alphabet();
 const startDialog = new StartDialog();
 const canvasDef = new CanvasDef(toolbox);
 
-canvas.setComponents(alphabet);
+canvas.setComponents(alphabet, header);
 toolbox.setComponents(header, canvas);
 header.setComponents(canvas, alphabet);
 canvasDef.setComponents(toolbox, canvas, header);
