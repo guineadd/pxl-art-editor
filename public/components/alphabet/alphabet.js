@@ -44,8 +44,8 @@ export default class Alphabet {
       div.parentElement.classList.add("disabled");
 
       div.parentElement.style = "order: 10; opacity: 0.5;";
-      div.nextElementSibling.style = "pointer-events: none";
-
+      div.nextElementSibling.style =
+        "pointer-events: none; display: flex; flex-direction: row; flex-wrap: wrap;";
       data = data.filter(obj => {
         if (obj.width === width && obj.height === height) {
           this.disabled.push(obj);
@@ -59,8 +59,8 @@ export default class Alphabet {
       div.parentElement.classList.add("enabled");
 
       div.parentElement.style = "order: unset; opacity: unset;";
-      div.nextElementSibling.style = "pointer-events: unset";
-
+      div.nextElementSibling.style =
+        "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
       this.disabled.forEach((obj, idx) => {
         if (obj.width === width && obj.height === height) {
           data.push(obj);
@@ -76,6 +76,5 @@ export default class Alphabet {
     }
 
     this._canvas.exportData = data;
-    this._canvas.saveState();
   }
 }

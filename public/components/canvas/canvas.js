@@ -240,7 +240,6 @@ export default class Canvas {
       // preserveObjectStacking: true
     });
 
-    // paintData.forEach(data => {
     for (let x = 0; x < canvas.width; x++) {
       let byteIndex = x * Math.ceil(canvas.height / 8);
       let remainingBits = 8;
@@ -295,44 +294,76 @@ export default class Canvas {
       `.size_${canvas.width}x${canvas.height}`
     );
 
-    const dimensionsContainer = document.getElementsByClassName(
-      "dimensions-container"
-    );
-
     const imageDiv = document.createElement("div");
     imageDiv.classList.add(`image-div`, `image-${this.counter}`);
     imageDiv.style =
       "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
 
     if (dimensionsDiv) {
-      console.log("1");
       dimensionsDiv
         .querySelector(`.image-container_${canvas.width}x${canvas.height}`)
         .appendChild(imageDiv);
     } else {
-      console.log("2");
-      let sizeDiv = `
-        <div class="size-div size_${canvas.width}x${canvas.height} enabled" style="order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;">
-            <div class="dimensions-container" style="display: flex; margin: 5px 0;"><h5>Size ${canvas.width} x ${canvas.height}</h5></div>
-                <div class="image-container_${canvas.width}x${canvas.height}" style="pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;">
-            </div>
-        </div>
-      `;
-      this.alphabetElement.innerHTML += sizeDiv;
-      const imageContainer = document.querySelector(
-        `.image-container_${canvas.width}x${canvas.height}`
+      const sizeDiv = document.createElement("div");
+      sizeDiv.classList.add(
+        `size-div`,
+        `size_${canvas.width}x${canvas.height}`,
+        `enabled`
       );
+      sizeDiv.style =
+        "order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;";
+
+      const dimensionsContainer = document.createElement("div");
+      dimensionsContainer.classList.add(`dimensions-container`);
+      dimensionsContainer.style = "display: flex; margin: 5px 0;";
+
+      const h5 = document.createElement("h5");
+      h5.innerHTML = `Size ${canvas.width} x ${canvas.height}`;
+
+      const imageContainer = document.createElement("div");
+      imageContainer.classList.add(
+        `image-container_${canvas.width}x${canvas.height}`
+      );
+      imageContainer.style =
+        "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
+
+      dimensionsContainer.appendChild(h5);
+      sizeDiv.appendChild(dimensionsContainer);
+      sizeDiv.appendChild(imageContainer);
       imageContainer.appendChild(imageDiv);
+      this.alphabetElement.appendChild(sizeDiv);
+
+      dimensionsContainer.addEventListener("click", () => {
+        this.alphabet.labelOnOff(dimensionsContainer, this.exportData);
+      });
     }
 
     imageDiv.appendChild(image);
     imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
 
     this.header.exportDataObj.data.push({ id: this.counter, data: paintData });
-    // });
 
-    dimensionsContainer[0].addEventListener("click", () => {
-      this.alphabet.labelOnOff(dimensionsContainer[0], this._canvas.exportData);
+    // sort the created div elements based on height
+    const sortedDivs = Array.from(
+      this.alphabetElement.getElementsByClassName("size-div")
+    ).sort((a, b) => {
+      const aClass = a.className.match(/size_(\d+)x(\d+)/);
+      const bClass = b.className.match(/size_(\d+)x(\d+)/);
+
+      if (aClass && aClass.length === 3 && bClass && bClass.length === 3) {
+        const aHeight = parseInt(aClass[2], 10);
+        const bHeight = parseInt(bClass[2], 10);
+
+        return bHeight - aHeight;
+      }
+
+      // if there is no class name, retain the same order
+      return 0;
+    });
+
+    // reorder the div elements in the alphabet
+    sortedDivs.forEach(sizeDiv => {
+      this.alphabetElement.appendChild(sizeDiv);
     });
 
     this.header.exportDataObj.width = canvas.width;
