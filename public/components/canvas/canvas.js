@@ -1,5 +1,4 @@
 import { fabric } from "fabric";
-import pako from "pako";
 
 export default class Canvas {
   constructor() {
@@ -18,27 +17,9 @@ export default class Canvas {
     this.edit = this.edit.bind(this);
     this.remove = this.remove.bind(this);
     this.exportData = [];
-    this.savedDimensions = [];
     this.pxlData = {
       width: null,
       height: null,
-      data: []
-    };
-    this.editData = {
-      id: null,
-      data: []
-    };
-    this.selectedDrawings = [];
-    this.state = {
-      draw: {
-        elements: null,
-        hex: null,
-        counter: null,
-        collectionTitle: null
-      },
-      edit: null
-    };
-    this.editState = {
       data: []
     };
     this.canvasWidth = null;
@@ -115,7 +96,6 @@ export default class Canvas {
     this.canvasContainer.addEventListener("contextmenu", e => {
       e.preventDefault();
     });
-    this.loadState();
   }
 
   newImage(canvas) {
@@ -191,7 +171,10 @@ export default class Canvas {
     );
 
     if (duplicateData !== -1) {
-      this.exportData[duplicateData].data.push(pxlArray);
+      this.exportData[duplicateData].data.push({
+        id: pxlArray.id,
+        data: pxlArray.data
+      });
     } else if (duplicateData === -1) {
       this.exportData.push({ ...this.pxlData });
     }
@@ -199,9 +182,6 @@ export default class Canvas {
     this.updateButtonState(this.alphabet.selected);
 
     const collectionTitle = document.getElementById("alphabetName").innerHTML;
-    console.log("this.pxlData", this.pxlData);
-    console.log("this.exportData", this.exportData);
-    console.log("pxlArray", pxlArray);
 
     let saveBody = {
       hex: pxlArray,
@@ -221,13 +201,12 @@ export default class Canvas {
         if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
       })
       .catch(err => console.error(`Error saving data: ${err}`));
-    this.counter++;
     this.paintFromDb(pxlArray);
+    this.counter++;
   }
 
   paintFromDb(pxlArray) {
     let paintData = pxlArray.data;
-    console.log(paintData);
     const canvas = document.createElement("canvas");
     canvas.width = this.pxlData.width;
     canvas.height = this.pxlData.height;
@@ -341,8 +320,6 @@ export default class Canvas {
     imageDiv.appendChild(image);
     imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
 
-    this.header.exportDataObj.data.push({ id: this.counter, data: paintData });
-
     // sort the created div elements based on height
     const sortedDivs = Array.from(
       this.alphabetElement.getElementsByClassName("size-div")
@@ -365,10 +342,6 @@ export default class Canvas {
     sortedDivs.forEach(sizeDiv => {
       this.alphabetElement.appendChild(sizeDiv);
     });
-
-    this.header.exportDataObj.width = canvas.width;
-    this.header.exportDataObj.height = canvas.height;
-    this.exportData.push(this.header.exportDataObj);
   }
 
   edit() {
@@ -464,77 +437,6 @@ export default class Canvas {
       this.removeBtn.style.pointerEvents = "none";
       this.editbtn.style.opacity = "0.5";
       this.editbtn.style.pointerEvents = "none";
-    }
-  }
-
-  async loadState() {
-    try {
-      const response = await fetch(`/get-data`);
-      const data = await response.json();
-
-      this.state = {
-        draw: {
-          elements: JSON.parse(data[0].draw).elements,
-          hex: JSON.parse(data[0].draw).hex,
-          counter: JSON.parse(data[0].draw).counter,
-          collectionTitle: JSON.parse(data[0].draw).collectionTitle
-        },
-        edit: data[0].edit
-      };
-
-      this.exportData = this.state.draw.hex === null ? [] : this.state.draw.hex;
-      this.counter =
-        this.state.draw.counter === null ? 1 : this.state.draw.counter;
-      const compressedEditDataObj = JSON.parse(this.state.edit);
-      const compressedEditDataArray = new Uint8Array(
-        Object.values(compressedEditDataObj)
-      );
-      const decompressedEditData = pako.ungzip(compressedEditDataArray, {
-        to: "string"
-      });
-      this.editState = JSON.parse(decompressedEditData);
-
-      if (this.state.draw.elements && this.state.draw.elements.length > 0) {
-        // clear existing content in the alphabet
-        this.alphabetElement.innerHTML = "";
-
-        // create array of div elements from state
-        let array = this.state.draw.elements.map(drawing => {
-          const parser = new DOMParser();
-          const div = parser.parseFromString(drawing, "text/html");
-
-          return div.body.firstChild;
-        });
-
-        // append the sorted div elements to the alphabet
-        array.forEach(div => {
-          this.alphabetElement.appendChild(div);
-
-          // add event listeners only to the images within the image-container
-          const images = div
-            .getElementsByClassName("image-container")[0]
-            .getElementsByTagName("div");
-
-          for (const image of images) {
-            image.addEventListener("click", () => this.alphabet.select(image));
-          }
-
-          let dimensions = div.childNodes[0];
-          dimensions.addEventListener("click", () => {
-            this.alphabet.labelOnOff(dimensions, this.exportData);
-          });
-        });
-      }
-
-      const selected = document.querySelector("#alphabet .selected");
-
-      if (selected) {
-        selected.classList.remove("selected");
-      }
-
-      this.updateButtonState(this.alphabet.selected);
-    } catch (err) {
-      console.error(`Error loading data: ${err}`);
     }
   }
 }

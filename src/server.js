@@ -121,9 +121,8 @@ app.post("/save-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
-    const CharacterData = dataToWrite.hex;
-    const CharacterHex = CharacterData.data[0];
-    console.log(CharacterHex);
+    const CharacterHex = dataToWrite.hex.data;
+    console.log("dataToWrite", dataToWrite);
 
     // check if a collection with the same name already exists
     let existingCollection = await collectionModel(sequelize).findOne({
@@ -133,8 +132,8 @@ app.post("/save-data", async (req, res) => {
     await characterModel(sequelize).create({
       CollectionId: existingCollection.Id,
       CharacterData: JSON.stringify(CharacterHex),
-      Width: CharacterData.width,
-      Height: CharacterData.height
+      Width: dataToWrite.width,
+      Height: dataToWrite.height
     });
 
     console.log(`New element added to: ${CollectionName}`);
