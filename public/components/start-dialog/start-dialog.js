@@ -22,6 +22,8 @@ export default class StartDialog {
     this.dataArray = null;
     this.collectionNameLoad = null;
     this.characterIds = null;
+    this.loadedWidth = null;
+    this.loadedHeight = null;
     this.fileContent = this.fileContent.bind(this);
   }
 
@@ -129,6 +131,8 @@ export default class StartDialog {
   }
 
   async loadCollection() {
+    const response = await fetch("/collections");
+    this.collections = await response.json();
     const collectionContainer = document.getElementById(
       "load-file-collection-container"
     );
@@ -141,10 +145,20 @@ export default class StartDialog {
 
     const fileDialog = () => {
       if (validFilenameRegex.test(collectionName.value)) {
-        this.collectionNameLoad = collectionName.value;
-        this.fileInput.removeEventListener("change", this.fileContent);
-        this.fileInput.click();
-        this.fileInput.addEventListener("change", this.fileContent);
+        const duplicate = this.collections.find(
+          item => collectionName.value === item.CollectionName
+        );
+        if (!duplicate) {
+          this.collectionNameLoad = collectionName.value;
+          this.fileInput.removeEventListener("change", this.fileContent);
+          this.fileInput.click();
+          this.fileInput.addEventListener("change", this.fileContent);
+        } else if (duplicate) {
+          inputAlert.classList.remove("hidden");
+          inputAlert.innerHTML =
+            "There already exists a collection with the same name. Please choose a different name.";
+          collectionName.focus();
+        }
       } else {
         inputAlert.innerHTML =
           "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
@@ -175,6 +189,7 @@ export default class StartDialog {
       const collectionContainer = document.getElementById(
         "load-file-collection-container"
       );
+      const alphabetName = document.getElementById("alphabetName");
 
       const file = this.fileInput.files[0];
       const reader = new FileReader();
@@ -184,9 +199,10 @@ export default class StartDialog {
 
         this.file = fileContent;
         collectionContainer.classList.add("hidden");
+        alphabetName.innerHTML = this.collectionNameLoad;
+
         this.parseFile();
         this.saveHexToDb();
-        // this.paintMultipleFromDb();
       };
 
       reader.readAsText(file);
@@ -200,8 +216,8 @@ export default class StartDialog {
     const dimensionsRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/;
     const dimensionsMatch = this.file.match(dimensionsRegex);
     const dimensions = dimensionsMatch ? dimensionsMatch[1] : null;
-    this.convWidth = parseInt(dimensions.split("x")[0], 10);
-    this.convHeight = parseInt(dimensions.split("x")[1], 10);
+    this.loadedWidth = parseInt(dimensions.split("x")[0], 10);
+    this.loadedHeight = parseInt(dimensions.split("x")[1], 10);
 
     const glyphRegex = /glyph_\d+x\d+/gs;
     this.file = this.file.replace(glyphRegex, "");
@@ -222,13 +238,10 @@ export default class StartDialog {
   }
 
   async saveHexToDb() {
-    console.log("this.collectionNameLoad", this.collectionNameLoad);
-    console.log(`${this.convWidth}x${this.convHeight}`);
-
     let saveBody = {
       hex: this.dataArray,
-      width: this.convWidth,
-      height: this.convHeight,
+      width: this.loadedWidth,
+      height: this.loadedHeight,
       collectionTitle: this.collectionNameLoad
     };
 
@@ -251,11 +264,24 @@ export default class StartDialog {
   }
 
   paintMultipleFromDb() {
+    this._canvas.canvas.setDimensions({
+      width: this.loadedWidth * this._canvas.gridSize,
+      height: this.loadedHeight * this._canvas.gridSize
+    });
+    this._canvas.grid.setDimensions({
+      width: this.loadedWidth * this._canvas.gridSize,
+      height: this.loadedHeight * this._canvas.gridSize
+    });
+    this._canvas.canvasWidth.value = this.loadedWidth;
+    this._canvas.canvasHeight.value = this.loadedHeight;
+    this._canvas.createdWidth = this.loadedWidth;
+    this._canvas.createdHeight = this.loadedHeight;
+
     this.dataArray.forEach((array, index) => {
       let paintData = array;
       const canvas = this._canvas.dataTransfiguration(
-        this.convWidth,
-        this.convHeight,
+        this.loadedWidth,
+        this.loadedHeight,
         paintData
       );
 
@@ -286,6 +312,31 @@ export default class StartDialog {
       imageDiv.classList.add(`image-div`, `image-${this.characterIds[index]}`);
       imageDiv.style =
         "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
+
+      let duplicateData = this._canvas.exportData.findIndex(
+        drawing =>
+          drawing.width === canvas.width && drawing.height === canvas.height
+      );
+
+      if (duplicateData !== -1) {
+        this._canvas.exportData[duplicateData].data.push({
+          id: this.characterIds[index],
+          data: array
+        });
+      } else if (duplicateData === -1) {
+        this._canvas.exportData.push({
+          ...{
+            width: canvas.width,
+            height: canvas.height,
+            data: [
+              {
+                id: this.characterIds[index],
+                data: array
+              }
+            ]
+          }
+        });
+      }
 
       if (dimensionsDiv) {
         dimensionsDiv
@@ -537,18 +588,6 @@ export default class StartDialog {
       input.addEventListener("keydown", enterKeyHandler);
       document.addEventListener("click", inputFocusOutHandler);
     });
-
-    // inputContainers.forEach(item => {
-    //   item.addEventListener("click", () => {
-    //     console.log(`Hi.`);
-    //     collections.forEach(collection => {
-    //       let input = collection.querySelector("span > input");
-    //       if (input.classList.contains("input-selected")) {
-    //         confirmBtn.disabled = false;
-    //       }
-    //     });
-    //   });
-    // });
   }
 
   updateName(collectionId, newCollectionName) {

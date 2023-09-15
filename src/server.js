@@ -4,8 +4,6 @@ import fs from "fs";
 import https from "https";
 // import http from "http";
 import dotenv from "dotenv";
-import pako from "pako";
-import { db } from "./db.js";
 import { sequelize } from "./db.js";
 import { collectionModel } from "./models/collection.js";
 import { characterModel } from "./models/character.js";
@@ -135,7 +133,6 @@ app.post("/save-data", async (req, res) => {
       Height: dataToWrite.height
     });
 
-    console.log(character.dataValues);
     console.log(`New element added to: ${CollectionName}`);
     res.status(200).json(character.dataValues.Id);
   } catch (err) {
@@ -149,10 +146,6 @@ app.post("/save-multiple-data", async (req, res) => {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
     const CharacterHex = dataToWrite.hex;
-    // console.log("dataToWrite", dataToWrite);
-    // console.log("CollectionName", CollectionName);
-    // console.log("CharacterHex", CharacterHex);
-    // console.log(`${dataToWrite.width}x${dataToWrite.height}`);
 
     const collection = await collectionModel(sequelize).create({
       CollectionName: CollectionName
@@ -203,54 +196,6 @@ app.get("/edit-character/:characterId", async (req, res) => {
     console.error(`Error fetching character data: ${err}`);
     res.status(500).send("Error fetching character data.");
   }
-});
-
-app.get("/get-data", async (req, res) => {
-  const query = "SELECT draw, edit FROM data_table";
-
-  db.all(query, (err, rows) => {
-    if (err) {
-      console.error(`Error reading data from the database: ${err}`);
-      res.status(500).json({ error: "Error reading data from the database." });
-    } else {
-      res.json(rows);
-    }
-  });
-});
-
-app.post("/delete-data", async (req, res) => {
-  const newData = {
-    elements: [],
-    hex: [],
-    counter: 1
-  };
-  const newEditData = {
-    data: []
-  };
-  const compressedEditData = pako.gzip(JSON.stringify(newEditData, null, 2));
-  const deleteQuery = "DELETE FROM data_table";
-
-  db.run(deleteQuery, deleteErr => {
-    if (deleteErr) {
-      console.error(`Error clearing table data: ${deleteErr}`);
-      res.status(500).send("Error clearing table data.");
-    } else {
-      const insertQuery = "INSERT INTO data_table (draw, edit) VALUES (?, ?)";
-      const values = [
-        JSON.stringify(newData),
-        JSON.stringify(compressedEditData)
-      ];
-
-      db.run(insertQuery, values, err => {
-        if (err) {
-          console.error(`Error saving data to the database: ${err}`);
-          res.status(500).send("Error saving data to the database.");
-        } else {
-          res.send("Data saved successfully.");
-        }
-      });
-    }
-  });
 });
 
 const port = process.env.port;

@@ -12,16 +12,10 @@ export default class Canvas {
     this.saveBtn = null;
     this.editbtn = null;
     this.removeBtn = null;
-    this.counter = null;
     this.save = this.save.bind(this);
     this.edit = this.edit.bind(this);
     this.remove = this.remove.bind(this);
     this.exportData = [];
-    this.pxlData = {
-      width: null,
-      height: null,
-      data: []
-    };
     this.canvasWidth = null;
     this.canvasHeight = null;
     this.createdWidth = null;
@@ -83,7 +77,6 @@ export default class Canvas {
     this.saveBtn.addEventListener("click", this.save);
     this.editbtn.addEventListener("click", this.edit);
     this.removeBtn.addEventListener("click", this.remove);
-    this.counter = 1;
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
     fabric.Object.prototype.objectCaching = false;
@@ -133,7 +126,6 @@ export default class Canvas {
       id: null,
       data: []
     };
-    this.pxlData.data = [];
 
     for (let x = 0; x < actualWidth; x++) {
       let exp = 0;
@@ -184,14 +176,10 @@ export default class Canvas {
       })
       .catch(err => console.error(`Error saving data: ${err}`));
 
-    this.pxlData.width = dimensions.width;
-    this.pxlData.height = dimensions.height;
-    this.pxlData.data.push(pxlArray);
-
     let duplicateData = this.exportData.findIndex(
       drawing =>
-        drawing.width === this.pxlData.width &&
-        drawing.height === this.pxlData.height
+        drawing.width === dimensions.width &&
+        drawing.height === dimensions.height
     );
 
     if (duplicateData !== -1) {
@@ -200,21 +188,22 @@ export default class Canvas {
         data: pxlArray.data
       });
     } else if (duplicateData === -1) {
-      this.exportData.push({ ...this.pxlData });
+      this.exportData.push({
+        ...{
+          width: dimensions.width,
+          height: dimensions.height,
+          data: [pxlArray]
+        }
+      });
     }
 
     this.updateButtonState(this.alphabet.selected);
-    this.paintFromDb(pxlArray);
+    this.paintFromDb(pxlArray, dimensions.width, dimensions.height);
   }
 
-  paintFromDb(pxlArray) {
+  paintFromDb(pxlArray, width, height) {
     let paintData = pxlArray.data;
-    const canvas = this.dataTransfiguration(
-      this.pxlData.width,
-      this.pxlData.height,
-      paintData
-    );
-
+    const canvas = this.dataTransfiguration(width, height, paintData);
     const scaledCanvas = document.createElement("canvas");
     scaledCanvas.width = canvas.width * 25;
     scaledCanvas.height = canvas.height * 25;
@@ -432,13 +421,11 @@ export default class Canvas {
 
       if (drawings.length === 0) {
         parent.remove();
-        this.counter = 1;
       }
     });
 
     this.alphabet.selected.length = 0;
     this.updateButtonState(this.alphabet.selected);
-    this.saveState();
   }
 
   updateButtonState(array) {
