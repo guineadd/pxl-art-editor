@@ -32,10 +32,10 @@ app.use(
 sequelize
   .sync({ force: false })
   .then(() => {
-    console.log("Database and tables have been created.");
+    console.log("Database and tables have been initialized.");
   })
   .catch(err => {
-    console.error(`Error creating database: ${err}`);
+    console.error(`Error initializing database: ${err}`);
   });
 
 app.get("/favicon.ico", (req, res) => {
@@ -180,6 +180,44 @@ app.post("/save-multiple-data", async (req, res) => {
   }
 });
 
+app.post("/load-multiple-data", async (req, res) => {
+  try {
+    const dataToWrite = req.body;
+    const CollectionName = dataToWrite.collectionTitle;
+
+    console.log(dataToWrite);
+    const collection = await collectionModel(sequelize).findOne({
+      where: { CollectionName }
+    });
+
+    if (!collection) {
+      console.log(`Collection not found for CollectionName: ${CollectionName}`);
+      res.status(404).json({ message: "Collection not found" });
+      return;
+    }
+
+    // fetch all characters associated with the found Collection
+    const characters = await characterModel(sequelize).findAll({
+      where: { CollectionId: collection.Id }
+    });
+
+    if (characters.length === 0) {
+      console.log(`No characters found for CollectionName: ${CollectionName}`);
+      // handle the case when no characters are found
+      res
+        .status(404)
+        .json({ message: "No characters found for the collection" });
+      return;
+    }
+
+    console.log(`All characters found for CollectionName: ${CollectionName}`);
+    res.status(200).json(characters);
+  } catch (err) {
+    console.error(`Error adding data: ${err}`);
+    res.status(500).send("Error adding data.");
+  }
+});
+
 app.get("/edit-character/:characterId", async (req, res) => {
   try {
     const { characterId } = req.params;
@@ -191,10 +229,32 @@ app.get("/edit-character/:characterId", async (req, res) => {
     }
 
     const characterData = JSON.parse(character.CharacterData);
+
+    console.log("Character data sent successfully.");
     res.status(200).json(characterData);
   } catch (err) {
     console.error(`Error fetching character data: ${err}`);
     res.status(500).send("Error fetching character data.");
+  }
+});
+
+app.delete("/delete-character/:characterId", async (req, res) => {
+  try {
+    const { characterId } = req.params;
+
+    const character = await characterModel(sequelize).findByPk(characterId);
+
+    if (!character) {
+      return res.status(404).send("Character not found.");
+    }
+
+    await character.destroy();
+
+    console.log("Character deleted successfully.");
+    res.status(200).send("Character deleted successfully.");
+  } catch (err) {
+    console.error(`Error deleting character: ${err}`);
+    res.status(500).send("Error deleting character.");
   }
 });
 

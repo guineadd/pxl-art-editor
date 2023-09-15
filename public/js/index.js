@@ -41,10 +41,10 @@ const canvasDef = new CanvasDef(toolbox);
 
 canvas.setComponents(alphabet, header);
 toolbox.setComponents(header, canvas);
-header.setComponents(canvas, alphabet);
+header.setComponents(canvas, alphabet, startDialog);
 canvasDef.setComponents(toolbox, canvas, header);
 alphabet.setComponents(canvas);
-startDialog.setComponents(canvas);
+startDialog.setComponents(canvas, alphabet);
 
 // render the components after inserting the HTML templates
 canvas.render(500, 500);

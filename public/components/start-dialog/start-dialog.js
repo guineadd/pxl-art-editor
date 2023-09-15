@@ -1,6 +1,7 @@
 export default class StartDialog {
   constructor() {
     this._canvas = null;
+    this.alphabet = null;
     this.startModal = null;
     this.newCollection = null;
     this.loadFromFile = null;
@@ -24,11 +25,14 @@ export default class StartDialog {
     this.characterIds = null;
     this.loadedWidth = null;
     this.loadedHeight = null;
+    this.DbWidth = null;
+    this.DbHeight = null;
     this.fileContent = this.fileContent.bind(this);
   }
 
-  setComponents(canvas) {
+  setComponents(canvas, alphabet) {
     this._canvas = canvas;
+    this.alphabet = alphabet;
   }
 
   render() {
@@ -47,39 +51,92 @@ export default class StartDialog {
     this.loadFromDb = document.getElementById("loadFromDb");
 
     this.newCollection.addEventListener("click", () => {
+      const input = document.getElementById("collection-name");
+      const confirmBtn = document.getElementById("confirm-save-modal-btn");
+
       this.startModal.classList.add("hidden");
       this.newCollectionModal.classList.remove("hidden");
+
+      document.removeEventListener("keyup", e =>
+        this.closeModalEsc(e, this.newCollectionModal, this.startModal)
+      );
+
+      input.removeEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          confirmBtn.click();
+        }
+      });
+
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          confirmBtn.click();
+        }
+      });
+
       this.saveCollection();
     });
 
     this.loadFromFile.addEventListener("click", () => {
+      const input = document.getElementById("load-file-collection-name");
+      const confirmBtn = document.getElementById("confirm-load-file-modal-btn");
+
       this.startModal.classList.add("hidden");
       this.loadFileCollectionModal.classList.remove("hidden");
+
+      document.removeEventListener("keyup", e =>
+        this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal)
+      );
+
+      input.removeEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          confirmBtn.click();
+        }
+      });
+
       this.loadCollection();
+
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          confirmBtn.click();
+        }
+      });
     });
 
     this.loadFromDb.addEventListener("click", () => {
       this.startModal.classList.add("hidden");
       this.loadDbCollectionModal.classList.remove("hidden");
+
+      document.removeEventListener("keyup", e =>
+        this.closeModalEsc(e, this.loadDbCollectionModal, this.startModal)
+      );
+
       this.loadCollectionsFromDb();
     });
 
     this.currentSelection = -1;
   }
 
+  closeModalEsc(e, currContainer, prevContainer) {
+    if (e.key === "Escape") {
+      currContainer.classList.add("hidden");
+      prevContainer.classList.remove("hidden");
+    }
+  }
+
   async saveCollection() {
     const response = await fetch("/collections");
     this.collections = await response.json();
 
-    const collectionContainer = document.getElementById(
-      "new-collection-container"
-    );
     const collectionName = document.getElementById("collection-name");
     const confirmSaveBtn = document.getElementById("confirm-save-modal-btn");
     const cancelSaveBtn = document.getElementById("cancel-save-modal-btn");
     const inputAlert = document.getElementById("new-input-alert");
     const alphabetName = document.getElementById("alphabetName");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
+
+    document.addEventListener("keyup", e =>
+      this.closeModalEsc(e, this.newCollectionModal, this.startModal)
+    );
 
     collectionName.focus();
     inputAlert.classList.add("hidden");
@@ -89,7 +146,7 @@ export default class StartDialog {
       confirmSaveBtn.disabled = !collectionName.value;
     });
 
-    confirmSaveBtn.addEventListener("click", async () => {
+    const checkDuplicateFile = async () => {
       if (validFilenameRegex.test(collectionName.value)) {
         const duplicate = this.collections.find(
           item => collectionName.value === item.CollectionName
@@ -109,7 +166,7 @@ export default class StartDialog {
             .catch(err => console.error(`Error creating collection: ${err}`));
 
           alphabetName.innerHTML = collectionName.value;
-          collectionContainer.classList.add("hidden");
+          this.newCollectionModal.classList.add("hidden");
         } else if (duplicate) {
           inputAlert.classList.remove("hidden");
           inputAlert.innerHTML =
@@ -122,10 +179,14 @@ export default class StartDialog {
         inputAlert.classList.remove("hidden");
         console.log("Invalid filename. Please enter a valid filename.");
       }
-    });
+    };
+
+    confirmSaveBtn.removeEventListener("click", checkDuplicateFile);
+
+    confirmSaveBtn.addEventListener("click", checkDuplicateFile);
 
     cancelSaveBtn.addEventListener("click", async () => {
-      collectionContainer.classList.add("hidden");
+      this.newCollectionModal.classList.add("hidden");
       this.startModal.classList.remove("hidden");
     });
   }
@@ -133,15 +194,17 @@ export default class StartDialog {
   async loadCollection() {
     const response = await fetch("/collections");
     this.collections = await response.json();
-    const collectionContainer = document.getElementById(
-      "load-file-collection-container"
-    );
+
     const collectionName = document.getElementById("load-file-collection-name");
     const confirmBtn = document.getElementById("confirm-load-file-modal-btn");
     const cancelBtn = document.getElementById("cancel-load-file-modal-btn");
     const inputAlert = document.getElementById("load-file-input-alert");
     this.fileInput = document.getElementById("start-modal-load-file");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
+
+    document.addEventListener("keyup", e =>
+      this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal)
+    );
 
     const fileDialog = () => {
       if (validFilenameRegex.test(collectionName.value)) {
@@ -179,16 +242,13 @@ export default class StartDialog {
 
     cancelBtn.addEventListener("click", async () => {
       confirmBtn.removeEventListener("click", fileDialog);
-      collectionContainer.classList.add("hidden");
+      this.loadFileCollectionModal.classList.add("hidden");
       this.startModal.classList.remove("hidden");
     });
   }
 
   fileContent() {
     if (this.fileInput.files.length > 0) {
-      const collectionContainer = document.getElementById(
-        "load-file-collection-container"
-      );
       const alphabetName = document.getElementById("alphabetName");
 
       const file = this.fileInput.files[0];
@@ -198,7 +258,7 @@ export default class StartDialog {
         const fileContent = event.target.result;
 
         this.file = fileContent;
-        collectionContainer.classList.add("hidden");
+        this.loadFileCollectionModal.classList.add("hidden");
         alphabetName.innerHTML = this.collectionNameLoad;
 
         this.parseFile();
@@ -258,30 +318,43 @@ export default class StartDialog {
       })
       .then(data => {
         this.characterIds = data.characterIds;
-        this.paintMultipleFromDb();
+        const source = "fileSource";
+        this.paintMultipleFromDb(source, this.dataArray);
       })
       .catch(err => console.error(`Error saving data: ${err}`));
   }
 
-  paintMultipleFromDb() {
+  paintMultipleFromDb(source, CharacteData) {
+    let currentWidth = 0;
+    let currentHeight = 0;
+
+    if (source === "fileSource") {
+      currentWidth = this.loadedWidth;
+      currentHeight = this.loadedHeight;
+    } else if (source === "DbSource") {
+      currentWidth = this.DbWidth;
+      currentHeight = this.DbHeight;
+    }
+
+    console.log(`${currentWidth}x${currentHeight}`);
     this._canvas.canvas.setDimensions({
-      width: this.loadedWidth * this._canvas.gridSize,
-      height: this.loadedHeight * this._canvas.gridSize
+      width: currentWidth * this._canvas.gridSize,
+      height: currentHeight * this._canvas.gridSize
     });
     this._canvas.grid.setDimensions({
-      width: this.loadedWidth * this._canvas.gridSize,
-      height: this.loadedHeight * this._canvas.gridSize
+      width: currentWidth * this._canvas.gridSize,
+      height: currentHeight * this._canvas.gridSize
     });
-    this._canvas.canvasWidth.value = this.loadedWidth;
-    this._canvas.canvasHeight.value = this.loadedHeight;
-    this._canvas.createdWidth = this.loadedWidth;
-    this._canvas.createdHeight = this.loadedHeight;
+    this._canvas.canvasWidth.value = currentWidth;
+    this._canvas.canvasHeight.value = currentHeight;
+    this._canvas.createdWidth = currentWidth;
+    this._canvas.createdHeight = currentHeight;
 
-    this.dataArray.forEach((array, index) => {
+    CharacteData.forEach((array, index) => {
       let paintData = array;
       const canvas = this._canvas.dataTransfiguration(
-        this.loadedWidth,
-        this.loadedHeight,
+        currentWidth,
+        currentHeight,
         paintData
       );
 
@@ -407,6 +480,7 @@ export default class StartDialog {
     sortedDivs.forEach(sizeDiv => {
       this._canvas.alphabetElement.appendChild(sizeDiv);
     });
+    this._canvas.updateButtonState(this.alphabet.selected);
   }
 
   async loadCollectionsFromDb() {
@@ -421,16 +495,18 @@ export default class StartDialog {
       this.collectionNames.push(item.CollectionName);
     });
 
-    const collectionContainer = document.getElementById(
-      "load-db-collection-container"
-    );
     const confirmBtn = document.getElementById("confirm-load-db-modal-btn");
     const cancelBtn = document.getElementById("cancel-load-db-modal-btn");
     const collections = document.querySelectorAll(`[class*="collection-id"]`);
 
+    document.addEventListener("keyup", e =>
+      this.closeModalEsc(e, this.loadDbCollectionModal, this.startModal)
+    );
+
     this.buildCollectionList();
 
     confirmBtn.addEventListener("click", async () => {
+      this.loadDataFromDb();
       this.loadDbCollectionModal.classList.add("hidden");
       alphabetName.innerHTML = `${this.collectionNames[this.currentSelection]}`;
       this.removeEventListeners(collections);
@@ -439,10 +515,42 @@ export default class StartDialog {
     cancelBtn.addEventListener("click", async () => {
       const collectionList = document.getElementById("collection-list");
       collectionList.innerHTML = "";
-      collectionContainer.classList.add("hidden");
+      this.loadDbCollectionModal.classList.add("hidden");
       this.startModal.classList.remove("hidden");
       this.removeEventListeners(collections);
     });
+  }
+
+  async loadDataFromDb() {
+    const selectedCollection = document.querySelector(".input-selected");
+    console.log("selected Name", selectedCollection.value);
+
+    let loadBody = {
+      collectionTitle: selectedCollection.value
+    };
+
+    await fetch(`/load-multiple-data`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(loadBody)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        const characterDataArray = data.map(character =>
+          JSON.parse(character.CharacterData)
+        );
+        const source = "DbSource";
+        this.characterIds = data.map(character => character.Id);
+        this.DbWidth = data[0].Width;
+        this.DbHeight = data[0].Height;
+        this.paintMultipleFromDb(source, characterDataArray);
+      })
+      .catch(err => console.error(`Error saving data: ${err}`));
   }
 
   buildCollectionList() {

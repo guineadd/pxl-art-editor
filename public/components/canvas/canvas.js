@@ -354,9 +354,9 @@ export default class Canvas {
     this.canvasWidth.value = width;
     this.canvasHeight.value = height;
 
-    let selection = parseInt(image.classList[1].substring(6), 10);
+    let selectedId = parseInt(image.classList[1].substring(6), 10);
 
-    const response = await fetch(`/edit-character/${selection}`);
+    const response = await fetch(`/edit-character/${selectedId}`);
     const data = await response.json();
 
     const tempCanvas = document.createElement("canvas");
@@ -393,36 +393,42 @@ export default class Canvas {
     });
   }
 
-  remove() {
-    this.alphabet.selected.forEach(drawing => {
-      // remove the selected drawings' DOM element
-      const parent = drawing.parentElement.parentElement;
-      let elementId = parseInt(drawing.classList[1].match(/\d+/)[0], 10);
-      drawing.remove();
+  async remove() {
+    const image = this.alphabetElement.querySelector(".selected");
+    let selectedId = parseInt(image.classList[1].substring(6), 10);
 
-      // remove the selected drawings' pixel data
-      this.exportData.forEach(item => {
-        item.data = item.data.filter(x => x.id !== elementId);
-      });
+    await fetch(`/delete-character/${selectedId}`, {
+      method: "DELETE"
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+      })
+      .catch(err => console.error(`Error deleting character: ${err}`));
 
-      // check pixel data and remove empty sets
-      let tempData = this.exportData;
-      tempData.forEach(item => {
-        if (item.data.length === 0) {
-          let idx = this.exportData.indexOf(item);
-          this.exportData.splice(idx, 1);
-        }
-      });
+    // remove the selected drawings' pixel data
+    this.exportData.forEach(item => {
+      item.data = item.data.filter(x => x.id !== selectedId);
+    });
 
-      // check parent element for content and remove it when empty
-      const drawings = parent
-        .getElementsByClassName("image-container")[0]
-        .getElementsByTagName("div");
-
-      if (drawings.length === 0) {
-        parent.remove();
+    // check pixel data and remove empty sets
+    let tempData = this.exportData;
+    tempData.forEach(item => {
+      if (item.data.length === 0) {
+        let idx = this.exportData.indexOf(item);
+        this.exportData.splice(idx, 1);
       }
     });
+
+    const parent = image.parentElement.parentElement;
+    image.remove();
+
+    const imageContainer = parent
+      .querySelector(`[class*=image-container]`)
+      .getElementsByTagName("div");
+
+    if (imageContainer.length === 0) {
+      parent.remove();
+    }
 
     this.alphabet.selected.length = 0;
     this.updateButtonState(this.alphabet.selected);

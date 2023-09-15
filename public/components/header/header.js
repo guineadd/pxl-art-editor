@@ -6,6 +6,8 @@ export default class Header {
     this.redoStack = [];
     this.canvas = null;
     this._canvas = null;
+    this.alphabet = null;
+    this.startDialog = null;
     this.grid = null;
     this.gridSize = null;
     this.undoBtn = null;
@@ -30,9 +32,10 @@ export default class Header {
     this.export = this.export.bind(this);
   }
 
-  setComponents(canvas, alphabet) {
+  setComponents(canvas, alphabet, startDialog) {
     this._canvas = canvas;
     this.alphabet = alphabet;
+    this.startDialog = startDialog;
   }
 
   render() {
@@ -107,11 +110,13 @@ export default class Header {
     }
   }
 
-  newProject() {
+  async newProject() {
     const modalContainer = document.getElementById("modal-container");
     const modal = document.getElementById("modal");
     const confirmBtn = document.getElementById("confirm-modal-btn");
     const cancelBtn = document.getElementById("cancel-modal-btn");
+    const alphabetName = document.getElementById("alphabetName");
+    const alphabet = document.getElementById("alphabet");
     let modalMsg = document.querySelector("#modal p");
 
     modalContainer.removeEventListener("click", e =>
@@ -133,7 +138,29 @@ export default class Header {
     );
 
     confirmBtn.addEventListener("click", async () => {
-      console.log("new project");
+      const response = await fetch("/collections");
+      this.startDialog.collections = await response.json();
+
+      modalContainer.classList.add("hidden");
+      this.startDialog.startModal.classList.remove("hidden");
+
+      alphabetName.innerHTML = "-";
+      alphabet.innerHTML = "";
+
+      this._canvas.canvas.setDimensions({
+        width: 25 * this._canvas.gridSize,
+        height: 25 * this._canvas.gridSize
+      });
+      this._canvas.grid.setDimensions({
+        width: 25 * this._canvas.gridSize,
+        height: 25 * this._canvas.gridSize
+      });
+      this._canvas.canvasWidth.value = 25;
+      this._canvas.canvasHeight.value = 25;
+      this._canvas.createdWidth = 25;
+      this._canvas.createdHeight = 25;
+
+      this._canvas.canvas.clear();
     });
   }
 
