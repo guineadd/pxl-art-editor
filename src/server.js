@@ -122,25 +122,86 @@ app.post("/save-data", async (req, res) => {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
     const CharacterHex = dataToWrite.hex.data;
-    console.log("dataToWrite", dataToWrite);
 
     // check if a collection with the same name already exists
     let existingCollection = await collectionModel(sequelize).findOne({
       where: { CollectionName }
     });
 
-    await characterModel(sequelize).create({
+    const character = await characterModel(sequelize).create({
       CollectionId: existingCollection.Id,
       CharacterData: JSON.stringify(CharacterHex),
       Width: dataToWrite.width,
       Height: dataToWrite.height
     });
 
+    console.log(character.dataValues);
     console.log(`New element added to: ${CollectionName}`);
-    res.status(200).send("Data saved successfully.");
+    res.status(200).json(character.dataValues.Id);
   } catch (err) {
     console.error(`Error adding data: ${err}`);
     res.status(500).send("Error adding data.");
+  }
+});
+
+app.post("/save-multiple-data", async (req, res) => {
+  try {
+    const dataToWrite = req.body;
+    const CollectionName = dataToWrite.collectionTitle;
+    const CharacterHex = dataToWrite.hex;
+    // console.log("dataToWrite", dataToWrite);
+    // console.log("CollectionName", CollectionName);
+    // console.log("CharacterHex", CharacterHex);
+    // console.log(`${dataToWrite.width}x${dataToWrite.height}`);
+
+    const collection = await collectionModel(sequelize).create({
+      CollectionName: CollectionName
+    });
+
+    const characterPromises = [];
+    const characterIds = []; // array to store character IDs
+
+    CharacterHex.forEach(array => {
+      const characterPromise = characterModel(sequelize).create({
+        CollectionId: collection.Id,
+        CharacterData: JSON.stringify(array),
+        Width: dataToWrite.width,
+        Height: dataToWrite.height
+      });
+
+      characterPromise.then(character => {
+        characterIds.push(character.Id); // push the ID of the created character
+      });
+
+      characterPromises.push(characterPromise);
+    });
+
+    // wait for all character creations to complete
+    await Promise.all(characterPromises);
+
+    console.log(`New element added to: ${CollectionName}`);
+    res.status(200).json({ message: "Data saved successfully", characterIds });
+  } catch (err) {
+    console.error(`Error adding data: ${err}`);
+    res.status(500).send("Error adding data.");
+  }
+});
+
+app.get("/edit-character/:characterId", async (req, res) => {
+  try {
+    const { characterId } = req.params;
+
+    const character = await characterModel(sequelize).findByPk(characterId);
+
+    if (!character) {
+      return res.status(404).send("Character not found.");
+    }
+
+    const characterData = JSON.parse(character.CharacterData);
+    res.status(200).json(characterData);
+  } catch (err) {
+    console.error(`Error fetching character data: ${err}`);
+    res.status(500).send("Error fetching character data.");
   }
 });
 

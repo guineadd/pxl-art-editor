@@ -17,6 +17,12 @@ export default class StartDialog {
     this.collectionId = [];
     this.collectionNames = [];
     this.currentSelection = null;
+    this.fileInput = null;
+    this.file = null;
+    this.dataArray = null;
+    this.collectionNameLoad = null;
+    this.characterIds = null;
+    this.fileContent = this.fileContent.bind(this);
   }
 
   setComponents(canvas) {
@@ -130,12 +136,15 @@ export default class StartDialog {
     const confirmBtn = document.getElementById("confirm-load-file-modal-btn");
     const cancelBtn = document.getElementById("cancel-load-file-modal-btn");
     const inputAlert = document.getElementById("load-file-input-alert");
-    const fileInput = document.getElementById("start-modal-load-file");
+    this.fileInput = document.getElementById("start-modal-load-file");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
 
     const fileDialog = () => {
       if (validFilenameRegex.test(collectionName.value)) {
-        fileInput.click();
+        this.collectionNameLoad = collectionName.value;
+        this.fileInput.removeEventListener("change", this.fileContent);
+        this.fileInput.click();
+        this.fileInput.addEventListener("change", this.fileContent);
       } else {
         inputAlert.innerHTML =
           "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
@@ -158,6 +167,194 @@ export default class StartDialog {
       confirmBtn.removeEventListener("click", fileDialog);
       collectionContainer.classList.add("hidden");
       this.startModal.classList.remove("hidden");
+    });
+  }
+
+  fileContent() {
+    if (this.fileInput.files.length > 0) {
+      const collectionContainer = document.getElementById(
+        "load-file-collection-container"
+      );
+
+      const file = this.fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = event => {
+        const fileContent = event.target.result;
+
+        this.file = fileContent;
+        collectionContainer.classList.add("hidden");
+        this.parseFile();
+        this.saveHexToDb();
+        // this.paintMultipleFromDb();
+      };
+
+      reader.readAsText(file);
+    } else {
+      console.error(`Please select a file.`);
+    }
+  }
+
+  parseFile() {
+    this.dataArray = [];
+    const dimensionsRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/;
+    const dimensionsMatch = this.file.match(dimensionsRegex);
+    const dimensions = dimensionsMatch ? dimensionsMatch[1] : null;
+    this.convWidth = parseInt(dimensions.split("x")[0], 10);
+    this.convHeight = parseInt(dimensions.split("x")[1], 10);
+
+    const glyphRegex = /glyph_\d+x\d+/gs;
+    this.file = this.file.replace(glyphRegex, "");
+    const charRegex = /const uint8_t.*?};/gs;
+    const matches = this.file.match(charRegex);
+
+    if (matches) {
+      for (const match of matches) {
+        const hexRegex = /0[xX][0-9A-Fa-f]{2}/g;
+        const hexValues = match.match(hexRegex);
+
+        if (hexValues) {
+          const values = hexValues.map(hex => parseInt(hex, 16));
+          this.dataArray.push(values);
+        }
+      }
+    }
+  }
+
+  async saveHexToDb() {
+    console.log("this.collectionNameLoad", this.collectionNameLoad);
+    console.log(`${this.convWidth}x${this.convHeight}`);
+
+    let saveBody = {
+      hex: this.dataArray,
+      width: this.convWidth,
+      height: this.convHeight,
+      collectionTitle: this.collectionNameLoad
+    };
+
+    await fetch(`/save-multiple-data`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(saveBody)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        this.characterIds = data.characterIds;
+        this.paintMultipleFromDb();
+      })
+      .catch(err => console.error(`Error saving data: ${err}`));
+  }
+
+  paintMultipleFromDb() {
+    this.dataArray.forEach((array, index) => {
+      let paintData = array;
+      const canvas = this._canvas.dataTransfiguration(
+        this.convWidth,
+        this.convHeight,
+        paintData
+      );
+
+      const scaledCanvas = document.createElement("canvas");
+      scaledCanvas.width = canvas.width * 25;
+      scaledCanvas.height = canvas.height * 25;
+      const scaledContext = scaledCanvas.getContext("2d");
+      scaledContext.imageSmoothingEnabled = false;
+      scaledContext.drawImage(
+        canvas,
+        0,
+        0,
+        scaledCanvas.width,
+        scaledCanvas.height
+      );
+
+      const dataURL = scaledCanvas.toDataURL();
+      const image = new Image();
+      image.src = dataURL;
+      image.width = 25;
+      image.height = 25;
+
+      const dimensionsDiv = document.querySelector(
+        `.size_${canvas.width}x${canvas.height}`
+      );
+
+      const imageDiv = document.createElement("div");
+      imageDiv.classList.add(`image-div`, `image-${this.characterIds[index]}`);
+      imageDiv.style =
+        "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
+
+      if (dimensionsDiv) {
+        dimensionsDiv
+          .querySelector(`.image-container_${canvas.width}x${canvas.height}`)
+          .appendChild(imageDiv);
+      } else {
+        const sizeDiv = document.createElement("div");
+        sizeDiv.classList.add(
+          `size-div`,
+          `size_${canvas.width}x${canvas.height}`,
+          `enabled`
+        );
+        sizeDiv.style =
+          "order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;";
+
+        const dimensionsContainer = document.createElement("div");
+        dimensionsContainer.classList.add(`dimensions-container`);
+        dimensionsContainer.style = "display: flex; margin: 5px 0;";
+
+        const h5 = document.createElement("h5");
+        h5.innerHTML = `Size ${canvas.width} x ${canvas.height}`;
+
+        const imageContainer = document.createElement("div");
+        imageContainer.classList.add(
+          `image-container_${canvas.width}x${canvas.height}`
+        );
+        imageContainer.style =
+          "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
+
+        dimensionsContainer.appendChild(h5);
+        sizeDiv.appendChild(dimensionsContainer);
+        sizeDiv.appendChild(imageContainer);
+        imageContainer.appendChild(imageDiv);
+        this._canvas.alphabetElement.appendChild(sizeDiv);
+
+        dimensionsContainer.addEventListener("click", () => {
+          this._canvas.alphabet.labelOnOff(
+            dimensionsContainer,
+            this._canvas.exportData
+          );
+        });
+      }
+
+      imageDiv.appendChild(image);
+      imageDiv.addEventListener("click", () =>
+        this._canvas.alphabet.select(imageDiv)
+      );
+    });
+    // sort the created div elements based on height
+    const sortedDivs = Array.from(
+      this._canvas.alphabetElement.getElementsByClassName("size-div")
+    ).sort((a, b) => {
+      const aClass = a.className.match(/size_(\d+)x(\d+)/);
+      const bClass = b.className.match(/size_(\d+)x(\d+)/);
+
+      if (aClass && aClass.length === 3 && bClass && bClass.length === 3) {
+        const aHeight = parseInt(aClass[2], 10);
+        const bHeight = parseInt(bClass[2], 10);
+
+        return bHeight - aHeight;
+      }
+
+      // if there is no class name, retain the same order
+      return 0;
+    });
+
+    // reorder the div elements in the alphabet
+    sortedDivs.forEach(sizeDiv => {
+      this._canvas.alphabetElement.appendChild(sizeDiv);
     });
   }
 
