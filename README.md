@@ -1,27 +1,56 @@
-# pxl-art-editor [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
-> Basic Pixel Art Editor with load and export files functionality
+# Pxl Art Editor
 
-## Installation
+Pxl Art Editor is a web application that can create pixel-based icon collections within a range of dimensions, or can plainly be used as a black and white drawing tool. The application also features an export and a file-load functionality, as well as a database to store drawn or loaded collections.
 
-```sh
-$ npm install --save pxl-art-editor
-```
+## Authors
 
-## Usage
+- Asterios Kalogeras
+- Dimitrios Kyprianou
 
-```js
-const pxlArtEditor = require('pxl-art-editor');
-
-pxlArtEditor('Rainbow');
-```
 ## License
 
-ISC © [A. Kalogeras, D. Kyprianou]()
+This project is licensed under the ISC © [A. Kalogeras, D. Kyprianou](LICENSE).
 
+## Getting Started
 
-[npm-image]: https://badge.fury.io/js/pxl-art-editor.svg
-[npm-url]: https://npmjs.org/package/pxl-art-editor
-[travis-image]: https://travis-ci.com/guineadd, DimitrisKyp/pxl-art-editor.svg?branch=master
-[travis-url]: https://travis-ci.com/guineadd, DimitrisKyp/pxl-art-editor
-[daviddm-image]: https://david-dm.org/guineadd, DimitrisKyp/pxl-art-editor.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/guineadd, DimitrisKyp/pxl-art-editor
+Follow these steps to run the Pxl Art Editor application on your local machine.
+
+### Step 1: Clone the Repository
+
+Clone this repository to your local machine using the following command:
+
+```bash
+git clone https://10.0.1.99/Kalogeras/pxl-art-editor.git
+```
+
+### Step 2: Install Dependencies
+
+Use the following command to install the project's dependencies:
+
+```bash
+npm install
+```
+
+### Step 3: Create the Tailwind Stylesheet
+
+Use the following command to create the project's main stylesheet:
+
+```bash
+npm run tailwind
+```
+
+### Step 4: Change the Environment Variables
+
+If you plan to run the application from within a web server, make sure to change the values of the [environment variables](.env) according to the server's URL and your desired port.
+
+### Step 5: Run the Application
+
+Use the following command to run the application:
+
+```bash
+npm start
+```
+
+### Step 6: Access the Application
+
+Either follow the console prompt or navigate to [https://localhost:3000](https://localhost:3000) in your browser's URL bar to access the Pxl Art Editor application.

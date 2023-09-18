@@ -2,6 +2,7 @@
   "name": "pxl-art-editor",
   "version": "1.0.0",
   "description": "Basic Pixel Art Editor with load and export files functionality",
+  "type": "module",
   "homepage": "",
   "author": "A. Kalogeras, D. Kyprianou",
   "files": [
@@ -55,11 +56,14 @@
   "license": "ISC",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "fabric": "^5.3.0",
     "file-saver": "^2.0.5",
     "generator-node": "^2.8.0",
-    "yo": "^4.3.1"
+    "pako": "^2.1.0",
+    "sequelize": "^6.32.1",
+    "sqlite3": "^5.1.6"
   },
   "lint-staged": {
     "*.js": [
@@ -97,7 +101,7 @@
       "prettier"
     ]
   },
-  "repository": "guineadd, DimitrisKyp/pxl-art-editor",
+  "repository": "guineadd/pxl-art-editor, DimitrisKyp/pxl-art-editor",
   "jest": {
     "testEnvironment": "node"
   }

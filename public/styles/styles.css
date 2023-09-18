@@ -19,52 +19,239 @@
 * {
   box-sizing: border-box;
   margin: 0;
-  padding: 0;
 }
 
 /* Base font size and line height */
 html {
   height: 100%;
+  width: 100%;
   font-size: 16px;
   line-height: 1.5;
 }
 
 /* Responsive font size for readability */
 body {
+  background-color: #e6cbce;
+  color: #fff;
   height: 100%;
   font-size: 1rem;
 }
 
-/* Container to center the content and set a max width */
-.container {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0;
+.size-div {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin: 5px;
 }
 
-/* Responsive layout for the main content */
-.main-content {
+#confirm-save-modal-btn:disabled:hover,
+#confirm-load-file-modal-btn:disabled:hover,
+#confirm-load-db-modal-btn:disabled:hover {
+  background-color: rgb(133 60 81);
+  cursor: default;
+}
+
+#confirm-save-modal-btn:disabled,
+#confirm-load-file-modal-btn:disabled,
+#confirm-load-db-modal-btn:disabled {
+  opacity: 0.6;
+}
+
+.input-default {
+  color: "#853c51";
+  background-color: unset;
+  pointer-events: none;
+  text-decoration: none;
+  width: 240px;
+}
+
+.input-selected {
+  color: #635456;
+  background-color: #f3f4f6;
+  pointer-events: none;
+  text-decoration: underline;
+  width: 240px;
+}
+
+.image-div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.image-div img {
+  width: 25px;
+  height: 25px;
+}
+
+#alphabet .selected {
+  background-color: #853c51;
+  border: #853c51;
+}
+
+.dimensions-container {
+  display: flex;
+  height: 30px;
+  margin: 5px 0;
+}
+
+.dimensions-container h5:hover {
+  cursor: pointer;
+  border: transparent;
+  box-shadow: 0 0 10px #b68b97;
+}
+
+.image-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 390px;
   margin: 0;
 }
 
-@media screen and (max-width: 768px) {
-  /* Tablets and larger screens */
-  .container {
-    max-width: 720px;
-  }
+.image-container div {
+  border: 1px solid black;
+}
 
-  .header {
-    padding: 30px;
+.image-container div:hover {
+  cursor: pointer;
+  box-shadow: 0 0 10px #b68b97;
+}
+
+@media screen and (max-width: 1280px) {
+  /* desktop screens */
+
+  .image-container {
+    width: 285px;
   }
 }
 
-@media screen and (max-width: 992px) {
-  /* Desktop screens */
-  .container {
-    max-width: 960px;
+@media screen and (max-width: 1024px) {
+  /* large screens */
+
+  #header-container {
+    margin-bottom: 0px;
   }
 
-  .header {
-    padding: 40px;
+  .main-container {
+    flex-direction: column;
+  }
+
+  #toolbox-container {
+    margin: 20px 0 20px 0;
+    position: static;
+  }
+
+  .toolbox {
+    width: 600px;
+    height: 80px;
+    flex-direction: row;
+  }
+
+  .tools {
+    flex-direction: row;
+  }
+
+  .actions {
+    flex-direction: row;
+    align-items: center;
+    height: 100px;
+  }
+
+  #alphabet-container {
+    position: static;
+  }
+
+  #alphabet {
+    height: 500px;
+    width: 475px;
+    margin-bottom: 20px;
+  }
+
+  .image-container {
+    width: 475px;
+  }
+
+  #modal {
+    width: 70%;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  /* tablets or smaller screens */
+
+  #canvas-container {
+    order: 1;
+    width: 100%;
+  }
+
+  #toolbox-container {
+    order: 2;
+  }
+
+  .actions {
+    order: 2;
+  }
+
+  #alphabet-container {
+    order: 2;
+  }
+
+  .canvas-def {
+    height: 45px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+  }
+
+  .dimensions {
+    flex-direction: row;
+  }
+
+  #create-btn,
+  #clear-btn {
+    padding: 3px 7px 3px 7px;
+  }
+
+  #canvas-container {
+    height: 560px;
+  }
+
+  .toolbox {
+    width: 250px;
+    height: 60px;
+  }
+}
+
+@media screen and (max-width: 530px) {
+  /* smartphones */
+
+  #canvas-container {
+    height: 430px;
+  }
+
+  .canvas {
+    width: 360px;
+    height: 360px;
+  }
+
+  .canvas-def {
+    width: 360px;
+  }
+
+  #alphabet-container {
+    margin-bottom: 20px;
+  }
+
+  #alphabet {
+    width: 298px;
+    height: 400px;
+  }
+
+  .image-container {
+    width: 285px;
   }
 }
