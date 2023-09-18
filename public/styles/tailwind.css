@@ -650,6 +650,10 @@ video {
   height: 100vh;
 }
 
+.max-h-\[500px\] {
+  max-height: 500px;
+}
+
 .w-3 {
   width: 0.75rem;
 }
@@ -851,10 +855,6 @@ video {
 
 .pt-1 {
   padding-top: 0.25rem;
-}
-
-.pt-\[50px\] {
-  padding-top: 50px;
 }
 
 .text-center {
