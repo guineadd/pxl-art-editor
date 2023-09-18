@@ -526,6 +526,7 @@ export default class StartDialog {
 
   async loadDataFromDb() {
     const selectedCollection = document.querySelector(".input-selected");
+    const alphabetName = document.getElementById("alphabetName");
 
     let loadBody = {
       collectionTitle: selectedCollection.value
@@ -539,10 +540,13 @@ export default class StartDialog {
       body: JSON.stringify(loadBody)
     })
       .then(res => {
+        if (res.status === 404) return { status: 404 };
         if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
         return res.json();
       })
       .then(data => {
+        alphabetName.innerHTML = selectedCollection.value;
+        if (data?.status === 404) return;
         const characterDataArray = data.map(character =>
           JSON.parse(character.CharacterData)
         );
@@ -583,7 +587,6 @@ export default class StartDialog {
       input.value = item.CollectionName;
       input.setAttribute("data-index", this.collectionId[index]);
       input.setAttribute("maxLength", "16");
-      input.style.width = "240px";
 
       const actionContainer = document.createElement("div");
       actionContainer.classList.add(`flex`, `flex-row`, `items-center`);

@@ -201,10 +201,10 @@ app.post("/load-multiple-data", async (req, res) => {
     if (characters.length === 0) {
       console.log(`No characters found for CollectionName: ${CollectionName}`);
       // handle the case when no characters are found
-      res
-        .status(404)
-        .json({ message: "No characters found for the collection" });
-      return;
+      return res.status(404).json({
+        message: "No characters found for the collection",
+        status: 404
+      });
     }
 
     console.log(`All characters found for CollectionName: ${CollectionName}`);
@@ -262,19 +262,8 @@ const key = fs.readFileSync("private_key.key", "utf8");
 const cert = fs.readFileSync("client_pxlart.crt", "utf8");
 const credentials = { key: key, cert: cert };
 
-// !Uncomment the following for development testing
-
-// app.listen(port, () => {
-//   console.log(`Server is running at http://localhost:${port}`);
-// });
-
-// ! Uncomment the following for production testing
-
 const server = https.createServer(credentials, app);
 
-// const server = http.createServer(app);
-
 server.listen(port, host, () => {
-  // console.log("listening at http://%s:%s", host, port);
   console.log("listening at https://%s:%s", host, port);
 });

@@ -101,7 +101,7 @@
       "prettier"
     ]
   },
-  "repository": "guineadd, DimitrisKyp/pxl-art-editor",
+  "repository": "guineadd/pxl-art-editor, DimitrisKyp/pxl-art-editor",
   "jest": {
     "testEnvironment": "node"
   }

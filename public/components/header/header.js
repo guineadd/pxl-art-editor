@@ -178,7 +178,8 @@ export default class Header {
     const blob = new Blob([cppFileContent], {
       type: "text/plain;charset=utf-8"
     });
+    const alphabetName = document.getElementById("alphabetName");
 
-    saveAs(blob, "alphabet.cpp");
+    saveAs(blob, `${alphabetName.value}.cpp`);
   }
 }

@@ -62,6 +62,7 @@ body {
   background-color: unset;
   pointer-events: none;
   text-decoration: none;
+  width: 240px;
 }
 
 .input-selected {
@@ -69,6 +70,7 @@ body {
   background-color: #f3f4f6;
   pointer-events: none;
   text-decoration: underline;
+  width: 240px;
 }
 
 .image-div {
