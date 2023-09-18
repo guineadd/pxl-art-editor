@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import https from "https";
-// import http from "http";
 import dotenv from "dotenv";
 import { sequelize } from "./db.js";
 import { collectionModel } from "./models/collection.js";
@@ -184,8 +183,6 @@ app.post("/load-multiple-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
-
-    console.log(dataToWrite);
     const collection = await collectionModel(sequelize).findOne({
       where: { CollectionName }
     });

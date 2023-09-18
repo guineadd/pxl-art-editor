@@ -224,8 +224,8 @@ export default class StartDialog {
       confirmBtn.disabled = !collectionName.value;
     });
 
-    if (!this.loadFromFileConfirmFlag) {
-      this.loadFromFileConfirmFlag = true;
+    if (!this.loadFileConfirmFlag) {
+      this.loadFileConfirmFlag = true;
       confirmBtn.addEventListener("click", fileDialog);
       input.addEventListener("keydown", e => {
         if (e.key === "Enter") {
@@ -768,7 +768,6 @@ export default class StartDialog {
 
     this.loadDbCollectionModal.classList.add("hidden");
     delModal.classList.remove("hidden");
-    console.log("collectionId", collectionId);
 
     const delCollectionHandler = () => {
       fetch(`/delete-collection/${collectionId}`, {

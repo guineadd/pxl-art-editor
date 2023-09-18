@@ -5,7 +5,6 @@ export default class Canvas {
     this.canvasContainer = null;
     this.canvas = null;
     this.alphabet = null;
-    this.header = null;
     this.alphabetElement = null;
     this.grid = null;
     this.gridSize = 20;
@@ -22,9 +21,8 @@ export default class Canvas {
     this.createdHeight = null;
   }
 
-  setComponents(alphabet, header) {
+  setComponents(alphabet) {
     this.alphabet = alphabet;
-    this.header = header;
   }
 
   render(width, height) {

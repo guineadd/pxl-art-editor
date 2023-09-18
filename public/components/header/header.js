@@ -14,19 +14,7 @@ export default class Header {
     this.redoBtn = null;
     this.exportBtn = null;
     this.exportData = null;
-    this.exportDataObj = {
-      width: null,
-      height: null,
-      data: [
-        {
-          id: null,
-          data: []
-        }
-      ]
-    };
     this.newBtn = null;
-    this.alphabetElement = null;
-    this.file = null;
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
     this.export = this.export.bind(this);
@@ -47,7 +35,6 @@ export default class Header {
     this.redoBtn = document.getElementById("redo-btn");
     this.exportBtn = document.getElementById("export-btn");
     this.newBtn = document.getElementById("new-btn");
-    this.alphabetElement = document.getElementById("alphabet");
     this.undoBtn.addEventListener("click", this.undo);
     this.redoBtn.addEventListener("click", this.redo);
     this.exportBtn.addEventListener("click", this.export);
