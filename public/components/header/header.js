@@ -138,9 +138,6 @@ export default class Header {
     );
 
     confirmBtn.addEventListener("click", async () => {
-      const response = await fetch("/collections");
-      this.startDialog.collections = await response.json();
-
       modalContainer.classList.add("hidden");
       this.startDialog.startModal.classList.remove("hidden");
 

@@ -28,6 +28,9 @@ export default class StartDialog {
     this.DbWidth = null;
     this.DbHeight = null;
     this.fileContent = this.fileContent.bind(this);
+    this.saveConfirmFlag = false;
+    this.loadDbConfirmFlag = false;
+    this.loadFileConfirmFlag = false;
   }
 
   setComponents(canvas, alphabet) {
@@ -51,9 +54,6 @@ export default class StartDialog {
     this.loadFromDb = document.getElementById("loadFromDb");
 
     this.newCollection.addEventListener("click", () => {
-      const input = document.getElementById("collection-name");
-      const confirmBtn = document.getElementById("confirm-save-modal-btn");
-
       this.startModal.classList.add("hidden");
       this.newCollectionModal.classList.remove("hidden");
 
@@ -61,25 +61,14 @@ export default class StartDialog {
         this.closeModalEsc(e, this.newCollectionModal, this.startModal)
       );
 
-      input.removeEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          confirmBtn.click();
-        }
-      });
-
-      input.addEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          confirmBtn.click();
-        }
-      });
+      document.addEventListener("keyup", e =>
+        this.closeModalEsc(e, this.newCollectionModal, this.startModal)
+      );
 
       this.saveCollection();
     });
 
     this.loadFromFile.addEventListener("click", () => {
-      const input = document.getElementById("load-file-collection-name");
-      const confirmBtn = document.getElementById("confirm-load-file-modal-btn");
-
       this.startModal.classList.add("hidden");
       this.loadFileCollectionModal.classList.remove("hidden");
 
@@ -87,19 +76,7 @@ export default class StartDialog {
         this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal)
       );
 
-      input.removeEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          confirmBtn.click();
-        }
-      });
-
       this.loadCollection();
-
-      input.addEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          confirmBtn.click();
-        }
-      });
     });
 
     this.loadFromDb.addEventListener("click", () => {
@@ -128,6 +105,7 @@ export default class StartDialog {
     this.collections = await response.json();
 
     const collectionName = document.getElementById("collection-name");
+    const input = document.getElementById("collection-name");
     const confirmSaveBtn = document.getElementById("confirm-save-modal-btn");
     const cancelSaveBtn = document.getElementById("cancel-save-modal-btn");
     const inputAlert = document.getElementById("new-input-alert");
@@ -167,6 +145,7 @@ export default class StartDialog {
 
           alphabetName.innerHTML = collectionName.value;
           this.newCollectionModal.classList.add("hidden");
+          this._canvas.exportData = [];
         } else if (duplicate) {
           inputAlert.classList.remove("hidden");
           inputAlert.innerHTML =
@@ -181,9 +160,15 @@ export default class StartDialog {
       }
     };
 
-    confirmSaveBtn.removeEventListener("click", checkDuplicateFile);
-
-    confirmSaveBtn.addEventListener("click", checkDuplicateFile);
+    if (!this.saveConfirmFlag) {
+      this.saveConfirmFlag = true;
+      confirmSaveBtn.addEventListener("click", checkDuplicateFile);
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          confirmSaveBtn.click();
+        }
+      });
+    }
 
     cancelSaveBtn.addEventListener("click", async () => {
       this.newCollectionModal.classList.add("hidden");
@@ -199,6 +184,7 @@ export default class StartDialog {
     const confirmBtn = document.getElementById("confirm-load-file-modal-btn");
     const cancelBtn = document.getElementById("cancel-load-file-modal-btn");
     const inputAlert = document.getElementById("load-file-input-alert");
+    const input = document.getElementById("load-file-collection-name");
     this.fileInput = document.getElementById("start-modal-load-file");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
 
@@ -238,7 +224,15 @@ export default class StartDialog {
       confirmBtn.disabled = !collectionName.value;
     });
 
-    confirmBtn.addEventListener("click", fileDialog);
+    if (!this.loadFromFileConfirmFlag) {
+      this.loadFromFileConfirmFlag = true;
+      confirmBtn.addEventListener("click", fileDialog);
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          confirmBtn.click();
+        }
+      });
+    }
 
     cancelBtn.addEventListener("click", async () => {
       confirmBtn.removeEventListener("click", fileDialog);
@@ -327,6 +321,7 @@ export default class StartDialog {
   paintMultipleFromDb(source, CharacteData) {
     let currentWidth = 0;
     let currentHeight = 0;
+    this._canvas.exportData = [];
 
     if (source === "fileSource") {
       currentWidth = this.loadedWidth;
@@ -336,7 +331,6 @@ export default class StartDialog {
       currentHeight = this.DbHeight;
     }
 
-    console.log(`${currentWidth}x${currentHeight}`);
     this._canvas.canvas.setDimensions({
       width: currentWidth * this._canvas.gridSize,
       height: currentHeight * this._canvas.gridSize
@@ -487,8 +481,12 @@ export default class StartDialog {
     const response = await fetch("/collections");
     this.collections = await response.json();
 
+    const collectionList = document.getElementById("collection-list");
+    collectionList.innerHTML = "";
+
     const alphabetName = document.getElementById("alphabetName");
     this.collectionId = [];
+    this.collectionNames = [];
 
     this.collections.forEach(item => {
       this.collectionId.push(item.Id);
@@ -505,12 +503,12 @@ export default class StartDialog {
 
     this.buildCollectionList();
 
-    confirmBtn.addEventListener("click", async () => {
+    const loadFromDbConfirmHandler = () => {
       this.loadDataFromDb();
       this.loadDbCollectionModal.classList.add("hidden");
       alphabetName.innerHTML = `${this.collectionNames[this.currentSelection]}`;
       this.removeEventListeners(collections);
-    });
+    };
 
     cancelBtn.addEventListener("click", async () => {
       const collectionList = document.getElementById("collection-list");
@@ -519,11 +517,15 @@ export default class StartDialog {
       this.startModal.classList.remove("hidden");
       this.removeEventListeners(collections);
     });
+
+    if (!this.loadDbConfirmFlag) {
+      this.loadDbConfirmFlag = true;
+      confirmBtn.addEventListener("click", loadFromDbConfirmHandler);
+    }
   }
 
   async loadDataFromDb() {
     const selectedCollection = document.querySelector(".input-selected");
-    console.log("selected Name", selectedCollection.value);
 
     let loadBody = {
       collectionTitle: selectedCollection.value
@@ -757,7 +759,7 @@ export default class StartDialog {
 
     this.loadDbCollectionModal.classList.add("hidden");
     delModal.classList.remove("hidden");
-
+    console.log("collectionId", collectionId);
     confirmBtn.addEventListener("click", () => {
       fetch(`/delete-collection/${collectionId}`, {
         method: "DELETE",
