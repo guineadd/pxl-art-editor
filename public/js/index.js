@@ -10,6 +10,8 @@ import Alphabet from "../components/alphabet/alphabet.js";
 import alphabetTemplate from "../components/alphabet/alphabet.html";
 import CanvasDef from "../components/canvas-definition/canvas-definition.js";
 import canvasDefTemplate from "../components/canvas-definition/canvas-definition.html";
+import StartDialog from "../components/start-dialog/start-dialog.js";
+import startDialogTemplate from "../components/start-dialog/start-dialog.html";
 
 // insert html templates into containers
 const canvasElement = document.getElementById("canvas-container");
@@ -27,20 +29,26 @@ alphabetElement.innerHTML = alphabetTemplate;
 const canvasDefElement = document.getElementById("canvas-def-container");
 canvasDefElement.innerHTML = canvasDefTemplate;
 
+const startDialogElement = document.getElementById("start-dialog-container");
+startDialogElement.innerHTML = startDialogTemplate;
+
 const canvas = new Canvas();
 const header = new Header();
 const toolbox = new Toolbox();
 const alphabet = new Alphabet();
+const startDialog = new StartDialog();
 const canvasDef = new CanvasDef(toolbox);
 
 canvas.setComponents(alphabet);
 toolbox.setComponents(header, canvas);
-header.setComponents(canvas, alphabet);
+header.setComponents(canvas, alphabet, startDialog);
 canvasDef.setComponents(toolbox, canvas, header);
 alphabet.setComponents(canvas);
+startDialog.setComponents(canvas, alphabet);
 
 // render the components after inserting the HTML templates
 canvas.render(500, 500);
+startDialog.render();
 header.render();
 toolbox.toolSelect();
 toolbox.render();

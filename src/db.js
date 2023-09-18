@@ -1,10 +1,14 @@
-import sqlite3 from "sqlite3";
+import { Sequelize } from "sequelize";
+import { collectionModel } from "./models/collection.js";
+import { characterModel } from "./models/character.js";
 
-export const db = new sqlite3.Database("src/database.db");
+export const sequelize = new Sequelize({
+  dialect: "sqlite",
+  storage: "src/database.sqlite"
+});
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS data_table (
-    draw TEXT,
-    edit TEXT
-  )
-`);
+const Collection = collectionModel(sequelize);
+const Character = characterModel(sequelize);
+
+Collection.hasMany(Character);
+Character.belongsTo(Collection);

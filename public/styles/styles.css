@@ -44,6 +44,35 @@ body {
   margin: 5px;
 }
 
+#confirm-save-modal-btn:disabled:hover,
+#confirm-load-file-modal-btn:disabled:hover,
+#confirm-load-db-modal-btn:disabled:hover {
+  background-color: rgb(133 60 81);
+  cursor: default;
+}
+
+#confirm-save-modal-btn:disabled,
+#confirm-load-file-modal-btn:disabled,
+#confirm-load-db-modal-btn:disabled {
+  opacity: 0.6;
+}
+
+.input-default {
+  color: "#853c51";
+  background-color: unset;
+  pointer-events: none;
+  text-decoration: none;
+  width: 240px;
+}
+
+.input-selected {
+  color: #635456;
+  background-color: #f3f4f6;
+  pointer-events: none;
+  text-decoration: underline;
+  width: 240px;
+}
+
 .image-div {
   display: flex;
   align-items: center;
@@ -101,6 +130,7 @@ body {
 
 @media screen and (max-width: 1024px) {
   /* large screens */
+
   #header-container {
     margin-bottom: 0px;
   }
