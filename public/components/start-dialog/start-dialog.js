@@ -563,22 +563,30 @@ export default class StartDialog {
       const collectionDiv = document.createElement("div");
       collectionDiv.classList.add(
         `mb-2`,
-        `collection-id-${this.collectionId[index]}`
+        `collection-id-${this.collectionId[index]}`,
+        `flex`,
+        `flex-row`
       );
 
-      const span = document.createElement("span");
+      const span = document.createElement("div");
       span.classList.add(
         `hover:bg-gray-100`,
         `hover:cursor-pointer`,
         `hover:text-header-hover`,
+        `mr-2`,
         `collection-name-${this.collectionId[index]}`
       );
-      span.style.marginRight = "10px";
+      span.style.width = "240px";
 
       const input = document.createElement("input");
       input.classList.add(`bg-transparent`, `input-default`);
       input.value = item.CollectionName;
       input.setAttribute("data-index", this.collectionId[index]);
+      input.setAttribute("maxLength", "16");
+      input.style.width = "240px";
+
+      const actionContainer = document.createElement("div");
+      actionContainer.classList.add(`flex`, `flex-row`, `items-center`);
 
       const edit = document.createElement("i");
       edit.classList.add(
@@ -586,9 +594,9 @@ export default class StartDialog {
         `hover:cursor-pointer`,
         `fa`,
         `fa-edit`,
+        `mr-2`,
         `collection-edit-${this.collectionId[index]}`
       );
-      edit.style.marginRight = "10px";
 
       const del = document.createElement("i");
       del.classList.add(
@@ -601,8 +609,9 @@ export default class StartDialog {
 
       span.appendChild(input);
       collectionDiv.appendChild(span);
-      collectionDiv.appendChild(edit);
-      collectionDiv.appendChild(del);
+      collectionDiv.appendChild(actionContainer);
+      actionContainer.appendChild(edit);
+      actionContainer.appendChild(del);
       collectionList.appendChild(collectionDiv);
 
       const collectionHandler = () => {
@@ -760,7 +769,8 @@ export default class StartDialog {
     this.loadDbCollectionModal.classList.add("hidden");
     delModal.classList.remove("hidden");
     console.log("collectionId", collectionId);
-    confirmBtn.addEventListener("click", () => {
+
+    const delCollectionHandler = () => {
       fetch(`/delete-collection/${collectionId}`, {
         method: "DELETE",
         headers: {
@@ -784,10 +794,14 @@ export default class StartDialog {
           inputAlert.innerHTML = "";
           this.loadCollectionsFromDb();
 
+          confirmBtn.removeEventListener("click", delCollectionHandler);
+
           console.log(`Collection deleted successfully: ${data}`);
         })
         .catch(err => console.error(`Error deleting collection: ${err}`));
-    });
+    };
+
+    confirmBtn.addEventListener("click", delCollectionHandler);
 
     cancelBtn.addEventListener("click", () => {
       delModal.classList.add("hidden");
