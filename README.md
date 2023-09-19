@@ -9,7 +9,7 @@ Pxl Art Editor is a web application that can create pixel-based icon collections
 
 ## License
 
-This project is licensed under the ISC © [A. Kalogeras, D. Kyprianou](LICENSE).
+This project is licensed under the ISC © [A. Kalogeras, D. Kyprianou](LICENSE.md).
 
 ## Getting Started
 
