@@ -371,6 +371,21 @@ export default class StartDialog {
       image.width = 25;
       image.height = 25;
 
+      const recognizedCanvas = document.createElement("canvas");
+      recognizedCanvas.width = canvas.width * 5;
+      recognizedCanvas.height = canvas.height * 5;
+      const recognizedContext = recognizedCanvas.getContext("2d");
+      recognizedContext.imageSmoothingEnabled = false;
+      recognizedContext.drawImage(
+        canvas,
+        0,
+        0,
+        recognizedCanvas.width,
+        recognizedCanvas.height
+      );
+
+      this._canvas.imgRecognitionData.push(recognizedCanvas.toDataURL());
+
       const dimensionsDiv = document.querySelector(
         `.size_${canvas.width}x${canvas.height}`
       );

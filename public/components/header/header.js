@@ -1,4 +1,6 @@
 import { saveAs } from "file-saver";
+import { Buffer } from "buffer";
+import Tesseract from "tesseract.js";
 
 export default class Header {
   constructor() {
@@ -14,6 +16,7 @@ export default class Header {
     this.redoBtn = null;
     this.exportBtn = null;
     this.exportData = null;
+    this.imgRecognitionData = null;
     this.newBtn = null;
     this.undo = this.undo.bind(this);
     this.redo = this.redo.bind(this);
@@ -130,6 +133,7 @@ export default class Header {
 
       alphabetName.innerHTML = "-";
       alphabet.innerHTML = "";
+      this._canvas.imgRecognitionData = [];
 
       this._canvas.canvas.setDimensions({
         width: 25 * this._canvas.gridSize,
@@ -150,10 +154,11 @@ export default class Header {
 
   export() {
     this.exportData = this._canvas.exportData;
-    this.generateCppFile(this.exportData);
+    this.imgRecognitionData = this._canvas.imgRecognitionData;
+    this.generateCppFile(this.exportData, this.imgRecognitionData);
   }
 
-  generateCppFile(data) {
+  async generateCppFile(data, recData) {
     let cppContent = "";
 
     for (let i = 0; i < data.length; i++) {
@@ -169,6 +174,9 @@ export default class Header {
             .padStart(2, "0")},\n`;
         }
 
+        // eslint-disable-next-line no-await-in-loop
+        await this.image2textRecognition(recData[j]);
+
         cppContent += `}; // Bitmap dimensions ${width}x${height} (width x height)\n`;
         cppContent += `extern constexpr Bitmap bitmap_element_${i}_${j}(element_${i}_${j}, ${width}, ${height});\n\n`;
       }
@@ -178,8 +186,54 @@ export default class Header {
     const blob = new Blob([cppFileContent], {
       type: "text/plain;charset=utf-8"
     });
+
     const alphabetName = document.getElementById("alphabetName");
 
-    saveAs(blob, `${alphabetName.value}.cpp`);
+    saveAs(blob, `${alphabetName.innerHTML}.cpp`);
+  }
+
+  async image2textRecognition(imageData) {
+    const base64Data = imageData.split(",")[1];
+
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64Data}`;
+
+    return new Promise((resolve, reject) => {
+      image.onload = async () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = image.width + 10;
+        canvas.height = image.height + 10;
+
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 5, 5);
+
+        const paddedBase64Data = canvas.toDataURL().split(",")[1];
+        const imageBuffer = Buffer.from(paddedBase64Data, "base64");
+
+        try {
+          const result = await Tesseract.recognize(imageBuffer, "eng");
+          const { data } = result;
+
+          if (data && data.text) {
+            console.log(`Recognized text: ${data.text}`);
+            resolve(data.text);
+          } else {
+            console.log(`No text recognized for the image.`);
+            resolve(null);
+          }
+        } catch (err) {
+          console.error(`Error recognizing text for the image: ${err}`);
+          reject(err);
+        }
+      };
+
+      image.onerror = err => {
+        console.error(`Error loading image: ${err}`);
+        reject(err);
+      };
+    });
   }
 }
