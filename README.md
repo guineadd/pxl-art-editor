@@ -20,7 +20,7 @@ Follow these steps to run the Pxl Art Editor application on your local machine.
 Clone this repository to your local machine using the following command:
 
 ```bash
-git clone https://10.0.1.99/Kalogeras/pxl-art-editor.git
+git clone https://github.com/guineadd/pxl-art-editor.git
 ```
 
 ### Step 2: Install Dependencies

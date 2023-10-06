@@ -19,6 +19,7 @@ export default class Canvas {
     this.canvasHeight = null;
     this.createdWidth = null;
     this.createdHeight = null;
+    this.imgRecognitionData = [];
   }
 
   setComponents(alphabet) {
@@ -220,6 +221,10 @@ export default class Canvas {
     image.src = dataURL;
     image.width = 25;
     image.height = 25;
+
+    const newImage = new Image();
+    newImage.src = canvas.toDataURL();
+    this.imgRecognitionData.push(newImage.src);
 
     const dimensionsDiv = document.querySelector(
       `.size_${canvas.width}x${canvas.height}`

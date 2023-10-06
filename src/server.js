@@ -10,6 +10,11 @@ import { characterModel } from "./models/character.js";
 const app = express();
 dotenv.config();
 
+const tessdataPrefix = process.env.TESSDATA_PREFIX;
+process.env.TESSDATA_PREFIX = path.join(path.resolve(), tessdataPrefix);
+
+console.log(`TESSDATA_PREFIX: ${process.env.TESSDATA_PREFIX}`);
+
 // increase the payload size limit for JSON and URL-encoded bodies
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: true, limit: "100mb" }));
@@ -27,6 +32,7 @@ app.use(
     )
   )
 );
+app.use("/assets/tessdata", express.static("../assets/tessdata"));
 
 sequelize
   .sync({ force: false })
@@ -255,8 +261,8 @@ app.delete("/delete-character/:characterId", async (req, res) => {
   }
 });
 
-const port = process.env.port;
-const host = process.env.host;
+const port = process.env.PORT;
+const host = process.env.HOST;
 
 const key = fs.readFileSync("private_key.key", "utf8");
 const cert = fs.readFileSync("client_pxlart.crt", "utf8");
