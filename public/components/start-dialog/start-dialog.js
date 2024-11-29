@@ -40,15 +40,9 @@ export default class StartDialog {
 
   render() {
     this.startModal = document.getElementById("start-modal-container");
-    this.newCollectionModal = document.getElementById(
-      "new-collection-container"
-    );
-    this.loadFileCollectionModal = document.getElementById(
-      "load-file-collection-container"
-    );
-    this.loadDbCollectionModal = document.getElementById(
-      "load-db-collection-container"
-    );
+    this.newCollectionModal = document.getElementById("new-collection-container");
+    this.loadFileCollectionModal = document.getElementById("load-file-collection-container");
+    this.loadDbCollectionModal = document.getElementById("load-db-collection-container");
     this.newCollection = document.getElementById("newCollection");
     this.loadFromFile = document.getElementById("loadFromFile");
     this.loadFromDb = document.getElementById("loadFromDb");
@@ -57,13 +51,9 @@ export default class StartDialog {
       this.startModal.classList.add("hidden");
       this.newCollectionModal.classList.remove("hidden");
 
-      document.removeEventListener("keyup", e =>
-        this.closeModalEsc(e, this.newCollectionModal, this.startModal)
-      );
+      document.removeEventListener("keyup", e => this.closeModalEsc(e, this.newCollectionModal, this.startModal));
 
-      document.addEventListener("keyup", e =>
-        this.closeModalEsc(e, this.newCollectionModal, this.startModal)
-      );
+      document.addEventListener("keyup", e => this.closeModalEsc(e, this.newCollectionModal, this.startModal));
 
       this.saveCollection();
     });
@@ -72,9 +62,7 @@ export default class StartDialog {
       this.startModal.classList.add("hidden");
       this.loadFileCollectionModal.classList.remove("hidden");
 
-      document.removeEventListener("keyup", e =>
-        this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal)
-      );
+      document.removeEventListener("keyup", e => this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal));
 
       this.loadCollection();
     });
@@ -83,9 +71,7 @@ export default class StartDialog {
       this.startModal.classList.add("hidden");
       this.loadDbCollectionModal.classList.remove("hidden");
 
-      document.removeEventListener("keyup", e =>
-        this.closeModalEsc(e, this.loadDbCollectionModal, this.startModal)
-      );
+      document.removeEventListener("keyup", e => this.closeModalEsc(e, this.loadDbCollectionModal, this.startModal));
 
       this.loadCollectionsFromDb();
     });
@@ -112,9 +98,7 @@ export default class StartDialog {
     const alphabetName = document.getElementById("alphabetName");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
 
-    document.addEventListener("keyup", e =>
-      this.closeModalEsc(e, this.newCollectionModal, this.startModal)
-    );
+    document.addEventListener("keyup", e => this.closeModalEsc(e, this.newCollectionModal, this.startModal));
 
     collectionName.focus();
     inputAlert.classList.add("hidden");
@@ -126,17 +110,15 @@ export default class StartDialog {
 
     const checkDuplicateFile = async () => {
       if (validFilenameRegex.test(collectionName.value)) {
-        const duplicate = this.collections.find(
-          item => collectionName.value === item.CollectionName
-        );
+        const duplicate = this.collections.find(item => collectionName.value === item.CollectionName);
 
         if (!duplicate) {
           fetch("/save-collection", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ collectionName: collectionName.value })
+            body: JSON.stringify({ collectionName: collectionName.value }),
           })
             .then(res => {
               if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
@@ -153,8 +135,7 @@ export default class StartDialog {
           collectionName.focus();
         }
       } else {
-        inputAlert.innerHTML =
-          "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
+        inputAlert.innerHTML = "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
         inputAlert.classList.remove("hidden");
         console.log("Invalid filename. Please enter a valid filename.");
       }
@@ -188,15 +169,11 @@ export default class StartDialog {
     this.fileInput = document.getElementById("start-modal-load-file");
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
 
-    document.addEventListener("keyup", e =>
-      this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal)
-    );
+    document.addEventListener("keyup", e => this.closeModalEsc(e, this.loadFileCollectionModal, this.startModal));
 
     const fileDialog = () => {
       if (validFilenameRegex.test(collectionName.value)) {
-        const duplicate = this.collections.find(
-          item => collectionName.value === item.CollectionName
-        );
+        const duplicate = this.collections.find(item => collectionName.value === item.CollectionName);
         if (!duplicate) {
           this.collectionNameLoad = collectionName.value;
           this.fileInput.removeEventListener("change", this.fileContent);
@@ -209,8 +186,7 @@ export default class StartDialog {
           collectionName.focus();
         }
       } else {
-        inputAlert.innerHTML =
-          "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
+        inputAlert.innerHTML = "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
         inputAlert.classList.remove("hidden");
         console.log("Invalid filename. Please enter a valid filename.");
       }
@@ -267,103 +243,99 @@ export default class StartDialog {
 
   parseFile() {
     this.dataArray = [];
-    const dimensionsRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/;
-    const dimensionsMatch = this.file.match(dimensionsRegex);
-    const dimensions = dimensionsMatch ? dimensionsMatch[1] : null;
-    this.loadedWidth = parseInt(dimensions.split("x")[0], 10);
-    this.loadedHeight = parseInt(dimensions.split("x")[1], 10);
 
-    const glyphRegex = /glyph_\d+x\d+/gs;
-    this.file = this.file.replace(glyphRegex, "");
-    const charRegex = /const uint8_t.*?};/gs;
-    const matches = this.file.match(charRegex);
+    const sizeRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/g;
+    const charRegex = /const uint8_t\s+.*?\{([^}]+)\};/gs;
 
-    if (matches) {
-      for (const match of matches) {
+    const sizes = {};
+    let sizeMatch;
+
+    let lastCharIndex = 0;
+
+    while ((sizeMatch = sizeRegex.exec(this.file)) !== null) {
+      const dimensions = sizeMatch[1];
+      const [width, height] = dimensions.split("x").map(Number);
+      const sizeKey = `${width}x${height}`;
+
+      if (!sizes[sizeKey]) {
+        sizes[sizeKey] = { width, height, data: [] };
+      }
+
+      const charDataMatch = this.file.slice(lastCharIndex).match(charRegex);
+
+      if (charDataMatch) {
+        const charBlock = charDataMatch[0];
+        lastCharIndex += this.file.slice(lastCharIndex).indexOf(charBlock) + charBlock.length;
         const hexRegex = /0[xX][0-9A-Fa-f]{2}/g;
-        const hexValues = match.match(hexRegex);
+        const hexValues = charBlock.match(hexRegex);
 
         if (hexValues) {
           const values = hexValues.map(hex => parseInt(hex, 16));
-          this.dataArray.push(values);
+          sizes[sizeKey].data.push(values);
         }
       }
     }
+
+    this.dataArray = Object.values(sizes);
   }
 
   async saveHexToDb() {
-    let saveBody = {
-      hex: this.dataArray,
-      width: this.loadedWidth,
-      height: this.loadedHeight,
-      collectionTitle: this.collectionNameLoad
+    const saveBody = {
+      data: this.dataArray.map(sizeGroup => ({
+        hex: sizeGroup.data,
+        width: sizeGroup.width,
+        height: sizeGroup.height,
+      })),
+      collectionTitle: this.collectionNameLoad,
     };
+    try {
+      const res = await fetch("/save-multiple-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(saveBody),
+      });
 
-    await fetch(`/save-multiple-data`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(saveBody)
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        this.characterIds = data.characterIds;
-        const source = "fileSource";
-        this.paintMultipleFromDb(source, this.dataArray);
-      })
-      .catch(err => console.error(`Error saving data: ${err}`));
+      if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+
+      const data = await res.json();
+      this.characterIds = data.characterIds;
+
+      for (const sizeGroup of this.dataArray) {
+        this.paintMultipleFromDb(sizeGroup.width, sizeGroup.height, sizeGroup.data);
+      }
+    } catch (err) {
+      console.error(`Error saving data: ${err}`);
+    }
   }
 
-  paintMultipleFromDb(source, CharacteData) {
-    let currentWidth = 0;
-    let currentHeight = 0;
+  paintMultipleFromDb(currentWidth, currentHeight, CharacterData) {
     this._canvas.exportData = [];
-
-    if (source === "fileSource") {
-      currentWidth = this.loadedWidth;
-      currentHeight = this.loadedHeight;
-    } else if (source === "DbSource") {
-      currentWidth = this.DbWidth;
-      currentHeight = this.DbHeight;
-    }
 
     this._canvas.canvas.setDimensions({
       width: currentWidth * this._canvas.gridSize,
-      height: currentHeight * this._canvas.gridSize
+      height: currentHeight * this._canvas.gridSize,
     });
     this._canvas.grid.setDimensions({
       width: currentWidth * this._canvas.gridSize,
-      height: currentHeight * this._canvas.gridSize
+      height: currentHeight * this._canvas.gridSize,
     });
     this._canvas.canvasWidth.value = currentWidth;
     this._canvas.canvasHeight.value = currentHeight;
     this._canvas.createdWidth = currentWidth;
     this._canvas.createdHeight = currentHeight;
 
-    CharacteData.forEach((array, index) => {
+    CharacterData.forEach((array, index) => {
       let paintData = array;
-      const canvas = this._canvas.dataTransfiguration(
-        currentWidth,
-        currentHeight,
-        paintData
-      );
+      const canvas = this._canvas.dataTransfiguration(currentWidth, currentHeight, paintData);
 
       const scaledCanvas = document.createElement("canvas");
       scaledCanvas.width = canvas.width * 25;
       scaledCanvas.height = canvas.height * 25;
       const scaledContext = scaledCanvas.getContext("2d");
       scaledContext.imageSmoothingEnabled = false;
-      scaledContext.drawImage(
-        canvas,
-        0,
-        0,
-        scaledCanvas.width,
-        scaledCanvas.height
-      );
+      scaledContext.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
 
       const dataURL = scaledCanvas.toDataURL();
       const image = new Image();
@@ -371,9 +343,7 @@ export default class StartDialog {
       image.width = 25;
       image.height = 25;
 
-      const dimensionsDiv = document.querySelector(
-        `.size_${canvas.width}x${canvas.height}`
-      );
+      const dimensionsDiv = document.querySelector(`.size_${canvas.width}x${canvas.height}`);
 
       const imageDiv = document.createElement("div");
       imageDiv.classList.add(`image-div`, `image-${this.characterIds[index]}`);
@@ -381,14 +351,13 @@ export default class StartDialog {
         "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
 
       let duplicateData = this._canvas.exportData.findIndex(
-        drawing =>
-          drawing.width === canvas.width && drawing.height === canvas.height
+        drawing => drawing.width === canvas.width && drawing.height === canvas.height,
       );
 
       if (duplicateData !== -1) {
         this._canvas.exportData[duplicateData].data.push({
           id: this.characterIds[index],
-          data: array
+          data: array,
         });
       } else if (duplicateData === -1) {
         this._canvas.exportData.push({
@@ -398,26 +367,19 @@ export default class StartDialog {
             data: [
               {
                 id: this.characterIds[index],
-                data: array
-              }
-            ]
-          }
+                data: array,
+              },
+            ],
+          },
         });
       }
 
       if (dimensionsDiv) {
-        dimensionsDiv
-          .querySelector(`.image-container_${canvas.width}x${canvas.height}`)
-          .appendChild(imageDiv);
+        dimensionsDiv.querySelector(`.image-container_${canvas.width}x${canvas.height}`).appendChild(imageDiv);
       } else {
         const sizeDiv = document.createElement("div");
-        sizeDiv.classList.add(
-          `size-div`,
-          `size_${canvas.width}x${canvas.height}`,
-          `enabled`
-        );
-        sizeDiv.style =
-          "order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;";
+        sizeDiv.classList.add(`size-div`, `size_${canvas.width}x${canvas.height}`, `enabled`);
+        sizeDiv.style = "order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;";
 
         const dimensionsContainer = document.createElement("div");
         dimensionsContainer.classList.add(`dimensions-container`);
@@ -427,11 +389,8 @@ export default class StartDialog {
         h5.innerHTML = `Size ${canvas.width} x ${canvas.height}`;
 
         const imageContainer = document.createElement("div");
-        imageContainer.classList.add(
-          `image-container_${canvas.width}x${canvas.height}`
-        );
-        imageContainer.style =
-          "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
+        imageContainer.classList.add(`image-container_${canvas.width}x${canvas.height}`);
+        imageContainer.style = "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
 
         dimensionsContainer.appendChild(h5);
         sizeDiv.appendChild(dimensionsContainer);
@@ -440,22 +399,15 @@ export default class StartDialog {
         this._canvas.alphabetElement.appendChild(sizeDiv);
 
         dimensionsContainer.addEventListener("click", () => {
-          this._canvas.alphabet.labelOnOff(
-            dimensionsContainer,
-            this._canvas.exportData
-          );
+          this._canvas.alphabet.labelOnOff(dimensionsContainer, this._canvas.exportData);
         });
       }
 
       imageDiv.appendChild(image);
-      imageDiv.addEventListener("click", () =>
-        this._canvas.alphabet.select(imageDiv)
-      );
+      imageDiv.addEventListener("click", () => this._canvas.alphabet.select(imageDiv));
     });
     // sort the created div elements based on height
-    const sortedDivs = Array.from(
-      this._canvas.alphabetElement.getElementsByClassName("size-div")
-    ).sort((a, b) => {
+    const sortedDivs = Array.from(this._canvas.alphabetElement.getElementsByClassName("size-div")).sort((a, b) => {
       const aClass = a.className.match(/size_(\d+)x(\d+)/);
       const bClass = b.className.match(/size_(\d+)x(\d+)/);
 
@@ -497,9 +449,7 @@ export default class StartDialog {
     const cancelBtn = document.getElementById("cancel-load-db-modal-btn");
     const collections = document.querySelectorAll(`[class*="collection-id"]`);
 
-    document.addEventListener("keyup", e =>
-      this.closeModalEsc(e, this.loadDbCollectionModal, this.startModal)
-    );
+    document.addEventListener("keyup", e => this.closeModalEsc(e, this.loadDbCollectionModal, this.startModal));
 
     this.buildCollectionList();
 
@@ -527,17 +477,16 @@ export default class StartDialog {
   async loadDataFromDb() {
     const selectedCollection = document.querySelector(".input-selected");
     const alphabetName = document.getElementById("alphabetName");
-
     let loadBody = {
-      collectionTitle: selectedCollection.value
+      collectionTitle: selectedCollection.value,
     };
 
     await fetch(`/load-multiple-data`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(loadBody)
+      body: JSON.stringify(loadBody),
     })
       .then(res => {
         if (res.status === 404) return { status: 404 };
@@ -547,14 +496,30 @@ export default class StartDialog {
       .then(data => {
         alphabetName.innerHTML = selectedCollection.value;
         if (data?.status === 404) return;
-        const characterDataArray = data.map(character =>
-          JSON.parse(character.CharacterData)
-        );
-        const source = "DbSource";
+
+        const characterDataArray = data.map(character => JSON.parse(character.CharacterData));
+        const dimensionBuckets = {};
         this.characterIds = data.map(character => character.Id);
-        this.DbWidth = data[0].Width;
-        this.DbHeight = data[0].Height;
-        this.paintMultipleFromDb(source, characterDataArray);
+
+        data.forEach((character, index) => {
+          const width = character.Width;
+          const height = character.Height;
+          const key = `${width}x${height}`;
+
+          if (!dimensionBuckets[key]) {
+            dimensionBuckets[key] = {
+              width,
+              height,
+              characters: [],
+            };
+          }
+
+          dimensionBuckets[key].characters.push(characterDataArray[index]);
+        });
+
+        Object.values(dimensionBuckets).forEach(({ width, height, characters }) => {
+          this.paintMultipleFromDb(width, height, characters);
+        });
       })
       .catch(err => console.error(`Error saving data: ${err}`));
   }
@@ -565,12 +530,7 @@ export default class StartDialog {
 
     this.collections.forEach((item, index) => {
       const collectionDiv = document.createElement("div");
-      collectionDiv.classList.add(
-        `mb-2`,
-        `collection-id-${this.collectionId[index]}`,
-        `flex`,
-        `flex-row`
-      );
+      collectionDiv.classList.add(`mb-2`, `collection-id-${this.collectionId[index]}`, `flex`, `flex-row`);
 
       const span = document.createElement("div");
       span.classList.add(
@@ -578,7 +538,7 @@ export default class StartDialog {
         `hover:cursor-pointer`,
         `hover:text-header-hover`,
         `mr-2`,
-        `collection-name-${this.collectionId[index]}`
+        `collection-name-${this.collectionId[index]}`,
       );
       span.style.width = "240px";
 
@@ -598,7 +558,7 @@ export default class StartDialog {
         `fa`,
         `fa-edit`,
         `mr-2`,
-        `collection-edit-${this.collectionId[index]}`
+        `collection-edit-${this.collectionId[index]}`,
       );
 
       const del = document.createElement("i");
@@ -607,7 +567,7 @@ export default class StartDialog {
         `hover:cursor-pointer`,
         `fa`,
         `fa-trash`,
-        `collection-delete-${this.collectionId[index]}`
+        `collection-delete-${this.collectionId[index]}`,
       );
 
       span.appendChild(input);
@@ -620,7 +580,7 @@ export default class StartDialog {
       const collectionHandler = () => {
         if (this.currentSelection !== -1 && this.currentSelection !== index) {
           const previousSelection = document.querySelector(
-            `.collection-id-${this.collectionId[this.currentSelection]} input`
+            `.collection-id-${this.collectionId[this.currentSelection]} input`,
           );
 
           previousSelection.classList.remove("input-selected");
@@ -647,7 +607,7 @@ export default class StartDialog {
 
         if (this.currentSelection !== -1 && this.currentSelection !== index) {
           const previousSelection = document.querySelector(
-            `.collection-id-${this.collectionId[this.currentSelection]} input`
+            `.collection-id-${this.collectionId[this.currentSelection]} input`,
           );
 
           previousSelection.classList.remove("input-selected");
@@ -659,8 +619,7 @@ export default class StartDialog {
           edit.classList.add("fa-save");
 
           input.focus();
-          input.style =
-            "color: #635456; text-decoration: underline; pointer-events: unset;";
+          input.style = "color: #635456; text-decoration: underline; pointer-events: unset;";
 
           input.setSelectionRange(input.value.length, input.value.length);
         } else if (edit.classList.contains("fa-save")) {
@@ -717,17 +676,15 @@ export default class StartDialog {
     const validFilenameRegex = /^[a-zA-Z0-9\s()_\-,.]+$/;
 
     if (validFilenameRegex.test(newCollectionName)) {
-      const duplicate = this.collections.find(
-        item => newCollectionName === item.CollectionName
-      );
+      const duplicate = this.collections.find(item => newCollectionName === item.CollectionName);
 
       if (!duplicate) {
         fetch(`/update-collection-name/${collectionId}`, {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ newCollectionName })
+          body: JSON.stringify({ newCollectionName }),
         })
           .then(res => {
             if (!res.ok) {
@@ -747,19 +704,15 @@ export default class StartDialog {
             }, 5000);
             console.log(`Collection name updated successfully: ${data}`);
           })
-          .catch(err =>
-            console.error(`Error updating collection name: ${err}`)
-          );
+          .catch(err => console.error(`Error updating collection name: ${err}`));
       } else if (duplicate) {
         inputAlert.classList.remove("hidden");
-        inputAlert.innerHTML =
-          "There already exists a collection with the same name. Please choose a different name.";
+        inputAlert.innerHTML = "There already exists a collection with the same name. Please choose a different name.";
         console.log("Duplicate filename. Please enter a different name.");
       }
     } else {
       inputAlert.classList.remove("hidden");
-      inputAlert.innerHTML =
-        "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
+      inputAlert.innerHTML = "A file name can contain only letters, numbers, spaces, and ( ) _ - , . ";
       console.log("Invalid filename. Please enter a valid filename.");
     }
   }
@@ -776,8 +729,8 @@ export default class StartDialog {
       fetch(`/delete-collection/${collectionId}`, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       })
         .then(res => {
           if (!res.ok) {
