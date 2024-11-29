@@ -1,0 +1,15 @@
+{
+  "printWidth": 120,
+  "tabWidth": 2,
+  "arrowParens": "avoid",
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "overrides": [
+    {
+      "files": ["*.html"],
+      "options": {
+        "printWidth": 120,
+        "parser": "html"
+      }
+    }
+  ]
+}

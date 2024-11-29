@@ -1,5 +1,4 @@
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import "../styles/styles.css";
 import Canvas from "../components/canvas/canvas.js";
 import canvasTemplate from "../components/canvas/canvas.html";
 import Header from "../components/header/header.js";

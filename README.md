@@ -9,7 +9,7 @@ Pxl Art Editor is a web application that can create pixel-based icon collections
 
 ## License
 
-This project is licensed under the ISC © [A. Kalogeras, D. Kyprianou](LICENSE).
+This project is licensed under the ISC © [A. Kalogeras, D. Kyprianou](LICENSE.md).
 
 ## Getting Started
 
@@ -31,19 +31,11 @@ Use the following command to install the project's dependencies:
 npm install
 ```
 
-### Step 3: Create the Tailwind Stylesheet
-
-Use the following command to create the project's main stylesheet:
-
-```bash
-npm run tailwind
-```
-
-### Step 4: Change the Environment Variables
+### Step 3: Change the Environment Variables
 
 If you plan to run the application from within a web server, make sure to change the values of the [environment variables](.env) according to the server's URL and your desired port.
 
-### Step 5: Run the Application
+### Step 4: Run the Application
 
 Use the following command to run the application:
 
@@ -51,6 +43,20 @@ Use the following command to run the application:
 npm start
 ```
 
-### Step 6: Access the Application
+Use the following command to create the project's main stylesheet for
+
+- testing:
+
+```bash
+npm run watch:css
+```
+
+- production:
+
+```bash
+npm run build:css
+```
+
+### Step 5: Access the Application
 
 Either follow the console prompt or navigate to [https://localhost:3000](https://localhost:3000) in your browser's URL bar to access the Pxl Art Editor application.

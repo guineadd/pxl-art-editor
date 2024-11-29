@@ -1,36 +1,49 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A pixel art editor that exports the saved collections as various file types">
-    <meta name="keywords" content="pixel, pxl, art, editor, pixel-art, pxl-art, export, load">
-    <title>Pxl Art Editor</title>
-  </head>
-  <body>
-    <div class="container-all">
-      <div id="header-container" class="header mb-5"></div>
-      <div class="main-container flex items-center justify-evenly">
-        <div id="toolbox-container" class="relative top-[11px]"></div>
-        <div id="canvas-container" class="flex flex-col justify-between items-center h-[600px] w-[500px]"></div>
-        <div class="actions flex flex-col justify-between h-[180px]">
-          <button id="save-btn" class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4 ">
-            <i class="fa fa-circle-arrow-right lg:hidden"></i>
-            <i class="fa fa-circle-arrow-down hidden lg:flex"></i>
-          </button>
-          <button id="edit-btn" class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4 ">
-            <i class="fa fa-circle-arrow-left lg:hidden"></i>
-            <i class="fa fa-circle-arrow-up hidden lg:flex"></i>
-          </button>
-          <button id="remove-btn" class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4">
-            <i class="fa fa-ban"></i>
-          </button>
-        </div>
-        <div id="alphabet-container" class="flex flex-col text-secondary-normal relative top-[23px]"></div>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A pixel art editor that exports the saved collections as various file types">
+  <meta name="keywords" content="pixel, pxl, art, editor, pixel-art, pxl-art, export, load">
+  <link href="./main.css" rel="stylesheet">
+  <link href="./dist/tailwind.css" rel="stylesheet">
+
+  <title>Pxl Art Editor</title>
+</head>
+
+<body>
+  <div class="container-all">
+    <div id="header-container" class="header mb-5"></div>
+    <div class="main-container flex items-center justify-evenly">
+      <div id="toolbox-container" class="relative top-[11px]"></div>
+      <div id="canvas-container" class="flex flex-col justify-between items-center h-[600px] w-[500px]"></div>
+      <div class="actions flex flex-col lg:flex-row lg:justify-between justify-evenly">
+        <button id="save-btn"
+          class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4">
+          <i id="save-icon" class="fa fa-circle-arrow-right"></i>
+        </button>
+
+        <button id="edit-btn"
+          class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4">
+          <i id="edit-icon" class="fa fa-circle-arrow-left"></i>
+        </button>
+
+        <button id="remove-btn"
+          class="text-secondary-normal text-6xl hover:text-secondary-hover hover:cursor-pointer p-4">
+          <i class="fa fa-ban"></i>
+        </button>
       </div>
+      <div id="alphabet-container" class="flex flex-col text-secondary-normal relative top-[23px]"></div>
     </div>
-    <div id="start-dialog-container"></div>
-    <div class="fixed bottom-3 right-3 font-monomd text-secondary-normal">v0.1.0</div>
-    <script type="text/javascript" src="dist/bundle.js"></script>
-  </body>
+    <!-- Footer -->
+    <div class="footer-container absolute bottom-1 justify-center flex w-full p-2 h-[30px] lg:flex-col lg:static ">
+      <div class="flex-1 text-center"></div>
+      <div class="text-right font-monomd text-secondary-normal mr-4"><span>v0.1.1</span></div>
+    </div>
+  </div>
+  <div id="start-dialog-container"></div>
+  <script type="text/javascript" src="dist/bundle.js"></script>
+</body>
+
 </html>

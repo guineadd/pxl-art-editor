@@ -14,6 +14,7 @@ export default class Canvas {
     this.save = this.save.bind(this);
     this.edit = this.edit.bind(this);
     this.remove = this.remove.bind(this);
+    this.updateIcons = this.updateIcons.bind(this);
     this.exportData = [];
     this.canvasWidth = null;
     this.canvasHeight = null;
@@ -32,14 +33,14 @@ export default class Canvas {
       selection: false,
       backgroundColor: "rgba(255, 255, 255, 255)",
       skipTargetFind: false,
-      preserveObjectStacking: true
+      preserveObjectStacking: true,
     });
 
     this.grid = new fabric.StaticCanvas("grid", {
       width: width,
       height: height,
       selection: false,
-      hoverCursor: "default"
+      hoverCursor: "default",
     });
 
     this.canvasWidth = document.getElementById("canvas-width");
@@ -52,8 +53,8 @@ export default class Canvas {
       this.grid.add(
         new fabric.Line([x, 0, x, height], {
           stroke: "#ddd",
-          selectable: false
-        })
+          selectable: false,
+        }),
       );
     }
 
@@ -62,8 +63,8 @@ export default class Canvas {
       this.grid.add(
         new fabric.Line([0, y, width, y], {
           stroke: "#ddd",
-          selectable: false
-        })
+          selectable: false,
+        }),
       );
     }
 
@@ -75,6 +76,8 @@ export default class Canvas {
     this.saveBtn.addEventListener("click", this.save);
     this.editbtn.addEventListener("click", this.edit);
     this.removeBtn.addEventListener("click", this.remove);
+    window.addEventListener("resize", this.updateIcons);
+    this.updateIcons();
     fabric.Object.prototype.hasControls = false;
     fabric.Object.prototype.hasRotatingPoint = false;
     fabric.Object.prototype.objectCaching = false;
@@ -94,7 +97,7 @@ export default class Canvas {
       left: 0,
       top: 0,
       selectable: true,
-      evented: false
+      evented: false,
     });
   }
 
@@ -104,7 +107,7 @@ export default class Canvas {
 
     const dimensions = {
       width: actualWidth,
-      height: actualHeight
+      height: actualHeight,
     };
 
     // create a temporary fabric.Canvas instance to render the fabric.js canvas content
@@ -112,17 +115,11 @@ export default class Canvas {
     tempCanvas.width = actualWidth;
     tempCanvas.height = actualHeight;
     const tempContext = tempCanvas.getContext("2d");
-    tempContext.drawImage(
-      this.canvas.getElement(),
-      0,
-      0,
-      actualWidth,
-      actualHeight
-    );
+    tempContext.drawImage(this.canvas.getElement(), 0, 0, actualWidth, actualHeight);
 
     const pxlArray = {
       id: null,
-      data: []
+      data: [],
     };
 
     for (let x = 0; x < actualWidth; x++) {
@@ -155,15 +152,15 @@ export default class Canvas {
       hex: pxlArray,
       width: dimensions.width,
       height: dimensions.height,
-      collectionTitle: collectionTitle
+      collectionTitle: collectionTitle,
     };
 
     await fetch(`/save-data`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(saveBody)
+      body: JSON.stringify(saveBody),
     })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
@@ -175,23 +172,21 @@ export default class Canvas {
       .catch(err => console.error(`Error saving data: ${err}`));
 
     let duplicateData = this.exportData.findIndex(
-      drawing =>
-        drawing.width === dimensions.width &&
-        drawing.height === dimensions.height
+      drawing => drawing.width === dimensions.width && drawing.height === dimensions.height,
     );
 
     if (duplicateData !== -1) {
       this.exportData[duplicateData].data.push({
         id: pxlArray.id,
-        data: pxlArray.data
+        data: pxlArray.data,
       });
     } else if (duplicateData === -1) {
       this.exportData.push({
         ...{
           width: dimensions.width,
           height: dimensions.height,
-          data: [pxlArray]
-        }
+          data: [pxlArray],
+        },
       });
     }
 
@@ -207,13 +202,7 @@ export default class Canvas {
     scaledCanvas.height = canvas.height * 25;
     const scaledContext = scaledCanvas.getContext("2d");
     scaledContext.imageSmoothingEnabled = false;
-    scaledContext.drawImage(
-      canvas,
-      0,
-      0,
-      scaledCanvas.width,
-      scaledCanvas.height
-    );
+    scaledContext.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
 
     const dataURL = scaledCanvas.toDataURL();
     const image = new Image();
@@ -221,9 +210,7 @@ export default class Canvas {
     image.width = 25;
     image.height = 25;
 
-    const dimensionsDiv = document.querySelector(
-      `.size_${canvas.width}x${canvas.height}`
-    );
+    const dimensionsDiv = document.querySelector(`.size_${canvas.width}x${canvas.height}`);
 
     const imageDiv = document.createElement("div");
     imageDiv.classList.add(`image-div`, `image-${pxlArray.id}`);
@@ -231,18 +218,11 @@ export default class Canvas {
       "display: flex; align-items: center; justify-content: center; border: 1px solid black; width: 35px; height: 35px;";
 
     if (dimensionsDiv) {
-      dimensionsDiv
-        .querySelector(`.image-container_${canvas.width}x${canvas.height}`)
-        .appendChild(imageDiv);
+      dimensionsDiv.querySelector(`.image-container_${canvas.width}x${canvas.height}`).appendChild(imageDiv);
     } else {
       const sizeDiv = document.createElement("div");
-      sizeDiv.classList.add(
-        `size-div`,
-        `size_${canvas.width}x${canvas.height}`,
-        `enabled`
-      );
-      sizeDiv.style =
-        "order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;";
+      sizeDiv.classList.add(`size-div`, `size_${canvas.width}x${canvas.height}`, `enabled`);
+      sizeDiv.style = "order: unset; opacity: unset; display: flex; flex-direction: column; align-items: start;";
 
       const dimensionsContainer = document.createElement("div");
       dimensionsContainer.classList.add(`dimensions-container`);
@@ -252,11 +232,8 @@ export default class Canvas {
       h5.innerHTML = `Size ${canvas.width} x ${canvas.height}`;
 
       const imageContainer = document.createElement("div");
-      imageContainer.classList.add(
-        `image-container_${canvas.width}x${canvas.height}`
-      );
-      imageContainer.style =
-        "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
+      imageContainer.classList.add(`image-container_${canvas.width}x${canvas.height}`);
+      imageContainer.style = "pointer-events: unset; display: flex; flex-direction: row; flex-wrap: wrap;";
 
       dimensionsContainer.appendChild(h5);
       sizeDiv.appendChild(dimensionsContainer);
@@ -273,9 +250,7 @@ export default class Canvas {
     imageDiv.addEventListener("click", () => this.alphabet.select(imageDiv));
 
     // sort the created div elements based on height
-    const sortedDivs = Array.from(
-      this.alphabetElement.getElementsByClassName("size-div")
-    ).sort((a, b) => {
+    const sortedDivs = Array.from(this.alphabetElement.getElementsByClassName("size-div")).sort((a, b) => {
       const aClass = a.className.match(/size_(\d+)x(\d+)/);
       const bClass = b.className.match(/size_(\d+)x(\d+)/);
 
@@ -321,7 +296,7 @@ export default class Canvas {
             width: this.gridSize,
             height: this.gridSize,
             fill: color,
-            evented: false
+            evented: false,
           });
 
           fabricCanvas.add(pixel).bringToFront(pixel);
@@ -341,9 +316,7 @@ export default class Canvas {
 
   async edit() {
     const image = this.alphabetElement.querySelector(".selected");
-    const dimensions = image.parentElement.parentElement.classList[1]
-      .substring(5)
-      .split("x");
+    const dimensions = image.parentElement.parentElement.classList[1].substring(5).split("x");
     const width = parseInt(dimensions[0], 10);
     const height = parseInt(dimensions[1], 10);
 
@@ -379,12 +352,12 @@ export default class Canvas {
 
       this.canvas.setDimensions({
         width: width * this.gridSize,
-        height: height * this.gridSize
+        height: height * this.gridSize,
       });
 
       this.grid.setDimensions({
         width: width * this.gridSize,
-        height: height * this.gridSize
+        height: height * this.gridSize,
       });
 
       this.canvas.renderAll();
@@ -396,7 +369,7 @@ export default class Canvas {
     let selectedId = parseInt(image.classList[1].substring(6), 10);
 
     await fetch(`/delete-character/${selectedId}`, {
-      method: "DELETE"
+      method: "DELETE",
     })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
@@ -420,9 +393,7 @@ export default class Canvas {
     const parent = image.parentElement.parentElement;
     image.remove();
 
-    const imageContainer = parent
-      .querySelector(`[class*=image-container]`)
-      .getElementsByTagName("div");
+    const imageContainer = parent.querySelector(`[class*=image-container]`).getElementsByTagName("div");
 
     if (imageContainer.length === 0) {
       parent.remove();
@@ -443,6 +414,25 @@ export default class Canvas {
       this.removeBtn.style.pointerEvents = "none";
       this.editbtn.style.opacity = "0.5";
       this.editbtn.style.pointerEvents = "none";
+    }
+  }
+
+  updateIcons() {
+    const isLargeScreen = window.innerWidth >= 1024;
+
+    const saveIcon = document.getElementById("save-icon");
+    const editIcon = document.getElementById("edit-icon");
+
+    if (isLargeScreen) {
+      saveIcon.className = "fa fa-circle-arrow-right";
+    } else {
+      saveIcon.className = "fa fa-circle-arrow-down";
+    }
+
+    if (isLargeScreen) {
+      editIcon.className = "fa fa-circle-arrow-left";
+    } else {
+      editIcon.className = "fa fa-circle-arrow-up";
     }
   }
 }
