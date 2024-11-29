@@ -1,18 +1,17 @@
 /* Import Tailwind CSS */
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-@import "./tailwind.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Declare imported monospace font */
 @font-face {
   font-family: "JetBrains Mono Light";
-  src: url("../../assets/fonts/JetBrainsMono-Light.ttf") format("truetype");
+  src: url("/assets/fonts/JetBrainsMono-Light.ttf") format("truetype");
 }
 
 @font-face {
   font-family: "JetBrains Mono Medium";
-  src: url("../../assets/fonts/JetBrainsMono-Medium.ttf") format("truetype");
+  src: url("/assets/fonts/JetBrainsMono-Medium.ttf") format("truetype");
 }
 
 /* Resetting default styles and providing a basic box-sizing */
@@ -143,20 +142,8 @@ body {
     position: static;
   }
 
-  .toolbox {
-    width: 600px;
-    height: 80px;
-    flex-direction: row;
-  }
-
   .tools {
     flex-direction: row;
-  }
-
-  .actions {
-    flex-direction: row;
-    align-items: center;
-    height: 100px;
   }
 
   #alphabet-container {
@@ -217,11 +204,6 @@ body {
 
   #canvas-container {
     height: 560px;
-  }
-
-  .toolbox {
-    width: 250px;
-    height: 60px;
   }
 }
 
