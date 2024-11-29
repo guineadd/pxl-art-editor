@@ -250,6 +250,8 @@ export default class StartDialog {
     const sizes = {};
     let sizeMatch;
 
+    let lastCharIndex = 0;
+
     while ((sizeMatch = sizeRegex.exec(this.file)) !== null) {
       const dimensions = sizeMatch[1];
       const [width, height] = dimensions.split("x").map(Number);
@@ -259,10 +261,11 @@ export default class StartDialog {
         sizes[sizeKey] = { width, height, data: [] };
       }
 
-      const charDataMatch = this.file.slice(sizeMatch.index).match(charRegex);
+      const charDataMatch = this.file.slice(lastCharIndex).match(charRegex);
 
       if (charDataMatch) {
         const charBlock = charDataMatch[0];
+        lastCharIndex += this.file.slice(lastCharIndex).indexOf(charBlock) + charBlock.length;
         const hexRegex = /0[xX][0-9A-Fa-f]{2}/g;
         const hexValues = charBlock.match(hexRegex);
 
@@ -285,7 +288,6 @@ export default class StartDialog {
       })),
       collectionTitle: this.collectionNameLoad,
     };
-
     try {
       const res = await fetch("/save-multiple-data", {
         method: "POST",
