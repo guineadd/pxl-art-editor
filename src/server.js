@@ -19,13 +19,7 @@ app.use(express.static("public"));
 app.use("/assets/webfonts", express.static("../assets/webfonts"));
 app.use(
   "/webfonts",
-  express.static(
-    path.join(
-      path.resolve(),
-      "node_modules",
-      "@fortawesome/fontawesome-free/webfonts"
-    )
-  )
+  express.static(path.join(path.resolve(), "node_modules", "@fortawesome/fontawesome-free/webfonts")),
 );
 
 sequelize
@@ -59,12 +53,10 @@ app.post("/save-collection", async (req, res) => {
   try {
     const data = req.body;
     const collection = await collectionModel(sequelize).create({
-      CollectionName: data.collectionName
+      CollectionName: data.collectionName,
     });
 
-    console.log(
-      `New collection created with name: ${collection.dataValues.CollectionName}`
-    );
+    console.log(`New collection created with name: ${collection.dataValues.CollectionName}`);
     res.status(200).send("Collection created successfully.");
   } catch (err) {
     console.error(`Error saving collection: ${err}`);
@@ -122,14 +114,14 @@ app.post("/save-data", async (req, res) => {
 
     // check if a collection with the same name already exists
     let existingCollection = await collectionModel(sequelize).findOne({
-      where: { CollectionName }
+      where: { CollectionName },
     });
 
     const character = await characterModel(sequelize).create({
       CollectionId: existingCollection.Id,
       CharacterData: JSON.stringify(CharacterHex),
       Width: dataToWrite.width,
-      Height: dataToWrite.height
+      Height: dataToWrite.height,
     });
 
     console.log(`New element added to: ${CollectionName}`);
@@ -144,34 +136,35 @@ app.post("/save-multiple-data", async (req, res) => {
   try {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
-    const CharacterHex = dataToWrite.hex;
-
-    const collection = await collectionModel(sequelize).create({
-      CollectionName: CollectionName
-    });
-
     const characterPromises = [];
     const characterIds = []; // array to store character IDs
 
-    CharacterHex.forEach(array => {
-      const characterPromise = characterModel(sequelize).create({
-        CollectionId: collection.Id,
-        CharacterData: JSON.stringify(array),
-        Width: dataToWrite.width,
-        Height: dataToWrite.height
-      });
-
-      characterPromise.then(character => {
-        characterIds.push(character.Id); // push the ID of the created character
-      });
-
-      characterPromises.push(characterPromise);
+    const collection = await collectionModel(sequelize).create({
+      CollectionName: CollectionName,
     });
 
-    // wait for all character creations to complete
+    for (const item of dataToWrite.data) {
+      const { hex: CharacterHex, width, height } = item;
+
+      for (const hexData of CharacterHex) {
+        const characterPromise = characterModel(sequelize).create({
+          CollectionId: collection.Id, // reference to the created collection
+          CharacterData: JSON.stringify(hexData), // Each individual hexData is stored here
+          Width: width,
+          Height: height,
+        });
+
+        characterPromises.push(characterPromise);
+
+        characterPromise.then(character => {
+          characterIds.push(character.Id);
+        });
+      }
+    }
+
     await Promise.all(characterPromises);
 
-    console.log(`New element added to: ${CollectionName}`);
+    console.log(`New elements added to: ${CollectionName}`);
     res.status(200).json({ message: "Data saved successfully", characterIds });
   } catch (err) {
     console.error(`Error adding data: ${err}`);
@@ -184,7 +177,7 @@ app.post("/load-multiple-data", async (req, res) => {
     const dataToWrite = req.body;
     const CollectionName = dataToWrite.collectionTitle;
     const collection = await collectionModel(sequelize).findOne({
-      where: { CollectionName }
+      where: { CollectionName },
     });
 
     if (!collection) {
@@ -195,7 +188,7 @@ app.post("/load-multiple-data", async (req, res) => {
 
     // fetch all characters associated with the found Collection
     const characters = await characterModel(sequelize).findAll({
-      where: { CollectionId: collection.Id }
+      where: { CollectionId: collection.Id },
     });
 
     if (characters.length === 0) {
@@ -203,7 +196,7 @@ app.post("/load-multiple-data", async (req, res) => {
       // handle the case when no characters are found
       return res.status(404).json({
         message: "No characters found for the collection",
-        status: 404
+        status: 404,
       });
     }
 

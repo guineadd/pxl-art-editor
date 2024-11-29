@@ -9,8 +9,8 @@ export default [
       ecmaVersion: 2021,
       sourceType: "module",
       globals: {
-        ...globals.jest,    // add Jest globals
-        ...globals.node,    // add Node.js globals
+        ...globals.jest, // add Jest globals
+        ...globals.node, // add Node.js globals
         ...globals.browser, // add browser globals
       },
     },
@@ -21,7 +21,6 @@ export default [
     rules: {
       "max-len": ["error", { code: 140 }],
       "capitalized-comments": "off",
-      "capitalized-comments": ["error", "never"],
       "max-params": ["error", 5],
       "no-unused-vars": "warn",
       "no-await-in-loop": "warn",
