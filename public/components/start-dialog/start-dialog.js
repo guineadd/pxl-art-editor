@@ -267,69 +267,77 @@ export default class StartDialog {
 
   parseFile() {
     this.dataArray = [];
-    const dimensionsRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/;
-    const dimensionsMatch = this.file.match(dimensionsRegex);
-    const dimensions = dimensionsMatch ? dimensionsMatch[1] : null;
-    this.loadedWidth = parseInt(dimensions.split("x")[0], 10);
-    this.loadedHeight = parseInt(dimensions.split("x")[1], 10);
 
-    const glyphRegex = /glyph_\d+x\d+/gs;
-    this.file = this.file.replace(glyphRegex, "");
-    const charRegex = /const uint8_t.*?};/gs;
-    const matches = this.file.match(charRegex);
+    const sizeRegex = /\/\/ Bitmap[^)]*\b(\d+x\d+)\b[^)]*\)/g;
+    const charRegex = /const uint8_t\s+.*?\{([^}]+)\};/gs;
 
-    if (matches) {
-      for (const match of matches) {
+    const sizes = {};
+    let sizeMatch;
+
+    while ((sizeMatch = sizeRegex.exec(this.file)) !== null) {
+      const dimensions = sizeMatch[1];
+      const [width, height] = dimensions.split("x").map(Number);
+      const sizeKey = `${width}x${height}`;
+
+      if (!sizes[sizeKey]) {
+        sizes[sizeKey] = { width, height, data: [] };
+      }
+
+      const charDataMatch = this.file.slice(sizeMatch.index).match(charRegex);
+
+      if (charDataMatch) {
+        const charBlock = charDataMatch[0];
         const hexRegex = /0[xX][0-9A-Fa-f]{2}/g;
-        const hexValues = match.match(hexRegex);
+        const hexValues = charBlock.match(hexRegex);
 
         if (hexValues) {
           const values = hexValues.map(hex => parseInt(hex, 16));
-          this.dataArray.push(values);
+          sizes[sizeKey].data.push(values);
         }
       }
     }
-  }
 
+    this.dataArray = Object.values(sizes);
+  }
+/* eslint-disable no-await-in-loop */
   async saveHexToDb() {
-    let saveBody = {
-      hex: this.dataArray,
-      width: this.loadedWidth,
-      height: this.loadedHeight,
-      collectionTitle: this.collectionNameLoad
-    };
+    for (const sizeGroup of this.dataArray) {
+      const saveBody = {
+        hex: sizeGroup.data,
+        width: sizeGroup.width,
+        height: sizeGroup.height,
+        collectionTitle: this.collectionNameLoad
+      };
 
-    await fetch(`/save-multiple-data`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(saveBody)
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
-        return res.json();
+      await fetch(`/save-multiple-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(saveBody)
       })
-      .then(data => {
-        this.characterIds = data.characterIds;
-        const source = "fileSource";
-        this.paintMultipleFromDb(source, this.dataArray);
-      })
-      .catch(err => console.error(`Error saving data: ${err}`));
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error. Status: ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          this.characterIds = data.characterIds;
+          this.paintMultipleFromDb(
+            sizeGroup.width,
+            sizeGroup.height,
+            sizeGroup.data
+          );
+        })
+        .catch(err =>
+          console.error(
+            `Error saving data for ${sizeGroup.width}x${sizeGroup.height}: ${err}`
+          )
+        );
+    }
   }
 
-  paintMultipleFromDb(source, CharacteData) {
-    let currentWidth = 0;
-    let currentHeight = 0;
+  paintMultipleFromDb(currentWidth, currentHeight, CharacterData) {
     this._canvas.exportData = [];
-
-    if (source === "fileSource") {
-      currentWidth = this.loadedWidth;
-      currentHeight = this.loadedHeight;
-    } else if (source === "DbSource") {
-      currentWidth = this.DbWidth;
-      currentHeight = this.DbHeight;
-    }
 
     this._canvas.canvas.setDimensions({
       width: currentWidth * this._canvas.gridSize,
@@ -344,7 +352,7 @@ export default class StartDialog {
     this._canvas.createdWidth = currentWidth;
     this._canvas.createdHeight = currentHeight;
 
-    CharacteData.forEach((array, index) => {
+    CharacterData.forEach((array, index) => {
       let paintData = array;
       const canvas = this._canvas.dataTransfiguration(
         currentWidth,
@@ -527,7 +535,6 @@ export default class StartDialog {
   async loadDataFromDb() {
     const selectedCollection = document.querySelector(".input-selected");
     const alphabetName = document.getElementById("alphabetName");
-
     let loadBody = {
       collectionTitle: selectedCollection.value
     };
@@ -547,14 +554,34 @@ export default class StartDialog {
       .then(data => {
         alphabetName.innerHTML = selectedCollection.value;
         if (data?.status === 404) return;
+
         const characterDataArray = data.map(character =>
           JSON.parse(character.CharacterData)
         );
-        const source = "DbSource";
+        const dimensionBuckets = {};
         this.characterIds = data.map(character => character.Id);
-        this.DbWidth = data[0].Width;
-        this.DbHeight = data[0].Height;
-        this.paintMultipleFromDb(source, characterDataArray);
+
+        data.forEach((character, index) => {
+          const width = character.Width;
+          const height = character.Height;
+          const key = `${width}x${height}`;
+
+          if (!dimensionBuckets[key]) {
+            dimensionBuckets[key] = {
+              width,
+              height,
+              characters: []
+            };
+          }
+
+          dimensionBuckets[key].characters.push(characterDataArray[index]);
+        });
+        console.log(dimensionBuckets);
+        Object.values(dimensionBuckets).forEach(
+          ({ width, height, characters }) => {
+            this.paintMultipleFromDb(width, height, characters);
+          }
+        );
       })
       .catch(err => console.error(`Error saving data: ${err}`));
   }

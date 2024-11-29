@@ -85,7 +85,7 @@ export default class Toolbox {
     this.canvas.discardActiveObject().renderAll();
   }
 
-  // eslint-disable-next-line max-params
+   
   addRectangle(left, top, fill, width = this.gridSize, height = this.gridSize) {
     const isPositionOccupied = this.existingRectPositions.some(position => {
       return position.left === left && position.top === top;
